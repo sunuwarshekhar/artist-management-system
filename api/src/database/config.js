@@ -1,6 +1,6 @@
-const pg = require("pg");
+const { Pool } = require("pg");
 
-const pool = new pg.Pool({
+const pool = new Pool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
   database: process.env.DB_NAME,
@@ -9,7 +9,15 @@ const pool = new pg.Pool({
 });
 
 async function checkConnection() {
-  await pool.query("SELECT 1");
+  const result = await pool.query("SELECT $1::text as status", [
+    "DB Connection check success",
+  ]);
+  console.log(result.rows[0].status);
 }
 
-module.exports = { checkConnection, pool };
+async function query(text, values) {
+  const res = await pool.query(text, values);
+  return res;
+}
+
+module.exports = { checkConnection, pool, query };
