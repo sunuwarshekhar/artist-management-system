@@ -7,6 +7,12 @@ require("dotenv").config({
 const http = require("http");
 const { checkConnection } = require("./database/config");
 const { login, register } = require("./controllers/auth");
+const { listUsers } = require("./controllers/users");
+const { sendSuccess } = require("./helpers/response");
+const { compose } = require("./helpers/compose");
+const { authenticate } = require("./middleware/auth");
+const { authorizeRoles } = require("./middleware/checkPermission");
+const { ROLES } = require("./constants/roles");
 
 const PORT = process.env.PORT || 5000;
 
@@ -55,6 +61,25 @@ const server = http.createServer(async (req, res) => {
 
   if (method === "POST" && path === "/api/auth/register") {
     register(req, res);
+    return;
+  }
+
+  if (method === "GET" && path === "/api/users") {
+    compose(req, res, [
+      authenticate,
+      authorizeRoles([ROLES.ARTIST_MANAGER]),
+      listUsers,
+    ]);
+    return;
+  }
+
+  if (method === "GET" && path === "/api/auth/me") {
+    compose(req, res, [
+      authenticate,
+      (req, res) => {
+        sendSuccess(res, req.user, "authenticated user");
+      },
+    ]);
     return;
   }
 

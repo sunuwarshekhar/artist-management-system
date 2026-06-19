@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { query } = require("../database/config");
 const { sendError, sendSuccess } = require("../helpers/response");
+const { ROLES, ALL_ROLES } = require("../constants/roles");
 
 function login(req, res) {
   let body = "";
@@ -93,8 +94,8 @@ function register(req, res) {
         );
       }
 
-      const userRole = role || "artist";
-      if (!["super_admin", "artist_manager", "artist"].includes(userRole)) {
+      const userRole = role || ROLES.ARTIST;
+      if (!ALL_ROLES.includes(userRole)) {
         return sendError(res, 400, "Invalid role");
       }
 
