@@ -7,9 +7,10 @@ require("dotenv").config({
 const http = require("http");
 const { checkConnection } = require("./database/config");
 const { login, register } = require("./controllers/auth");
-const { listUsers } = require("./controllers/users");
+const { listUsers, createUser } = require("./controllers/users");
 const { sendSuccess } = require("./helpers/response");
 const { compose } = require("./helpers/compose");
+const { parseJsonBody } = require("./helpers/bodyParser");
 const { authenticate } = require("./middleware/auth");
 const { authorizeRoles } = require("./middleware/checkPermission");
 const { ROLES } = require("./constants/roles");
@@ -53,7 +54,7 @@ const server = http.createServer(async (req, res) => {
     }
     return;
   }
-
+  //todo: need to adapt for body parser in future
   if (method === "POST" && path === "/api/auth/login") {
     login(req, res);
     return;
@@ -73,6 +74,16 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (method === "POST" && path === "/api/users") {
+    compose(req, res, [
+      authenticate,
+      authorizeRoles([]),
+      parseJsonBody,
+      createUser,
+    ]);
+    return;
+  }
+
   if (method === "GET" && path === "/api/auth/me") {
     compose(req, res, [
       authenticate,
@@ -85,7 +96,7 @@ const server = http.createServer(async (req, res) => {
 
   //fallback to not found
   res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ success: false, message: "Not found" }));
+  res.end(JSON.stringify({ success: false, message: "Route not found" }));
 });
 
 server.listen(PORT, async () => {

@@ -6,7 +6,6 @@ function authorizeRoles(allowedRoles) {
     if (!req.user) {
       return sendError(res, 401, "Authentication required");
     }
-    console.log(req.user.role, "sss");
     if (req.user.role === ROLES.SUPER_ADMIN) {
       return next();
     }
@@ -15,7 +14,7 @@ function authorizeRoles(allowedRoles) {
       return sendError(res, 403, "No Permission");
     }
 
-    next();
+    return next();
   };
 }
 

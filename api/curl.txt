@@ -19,5 +19,17 @@ curl -i -X POST http://localhost:5000/api/auth/register \
   -H "Authorization: Bearer TOKEN"
 
   "list users"
-  curl -i http://localhost:5000/api/users \
+  curl -i http://localhost:5000/api/users?page=1&limit=10 \
   -H "Authorization: Bearer TOKEN"
+
+  "create new user"
+  curl -i -X POST http://localhost:5000/api/users \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "Test",
+    "last_name": "User",
+    "email": "test@gmail.com",
+    "password": "password@123",
+    "role": "artist_manager"
+  }'
