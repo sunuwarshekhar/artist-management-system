@@ -33,3 +33,14 @@ curl -i -X POST http://localhost:5000/api/auth/register \
     "password": "password@123",
     "role": "artist_manager"
   }'
+  
+  "update user"
+  curl -i -X PUT http://localhost:5000/api/users/${id} \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"last_name": "User2"}'
+
+  "del user"
+  curl -i -X DELETE http://localhost:5000/api/users/${id} \
+  -H "Authorization: Bearer TOKEN"
+

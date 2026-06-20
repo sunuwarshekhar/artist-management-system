@@ -7,7 +7,12 @@ require("dotenv").config({
 const http = require("http");
 const { checkConnection } = require("./database/config");
 const { login, register } = require("./controllers/auth");
-const { listUsers, createUser } = require("./controllers/users");
+const {
+  listUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+} = require("./controllers/users");
 const { sendSuccess } = require("./helpers/response");
 const { compose } = require("./helpers/compose");
 const { parseJsonBody } = require("./helpers/bodyParser");
@@ -82,6 +87,29 @@ const server = http.createServer(async (req, res) => {
       createUser,
     ]);
     return;
+  }
+
+  const userIdMatch = path.match(/^\/api\/users\/(\d+)$/);
+  //regex pattern to extract id here whcih comes in 1 idx
+  console.log(userIdMatch, "userIdMatch");
+
+  if (userIdMatch) {
+    req.params = { id: userIdMatch[1] };
+
+    if (method === "PUT") {
+      compose(req, res, [
+        authenticate,
+        authorizeRoles([]),
+        parseJsonBody,
+        updateUser,
+      ]);
+      return;
+    }
+
+    if (method === "DELETE") {
+      compose(req, res, [authenticate, authorizeRoles([]), deleteUser]);
+      return;
+    }
   }
 
   if (method === "GET" && path === "/api/auth/me") {
