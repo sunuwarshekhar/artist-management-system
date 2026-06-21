@@ -22,6 +22,10 @@ curl -i -X POST http://localhost:5000/api/auth/register \
   curl -i http://localhost:5000/api/users?page=1&limit=10 \
   -H "Authorization: Bearer TOKEN"
 
+  "get user"
+  curl -i http://localhost:5000/api/users/${id} \
+  -H "Authorization: Bearer TOKEN"
+
   "create new user"
   curl -i -X POST http://localhost:5000/api/users \
   -H "Authorization: Bearer TOKEN" \
@@ -42,5 +46,9 @@ curl -i -X POST http://localhost:5000/api/auth/register \
 
   "del user"
   curl -i -X DELETE http://localhost:5000/api/users/${id} \
+  -H "Authorization: Bearer TOKEN"
+
+  "user detail"
+  curl -i http://localhost:5000/api/users/${id} \
   -H "Authorization: Bearer TOKEN"
 

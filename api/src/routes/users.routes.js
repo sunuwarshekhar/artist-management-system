@@ -1,5 +1,6 @@
 const {
   listUsers,
+  getUser,
   createUser,
   updateUser,
   deleteUser,
@@ -12,11 +13,7 @@ const { ROLES } = require("../constants/roles");
 
 function handleUserRoutes(req, res, method, path) {
   if (method === "GET" && path === "/api/users") {
-    compose(req, res, [
-      authenticate,
-      authorizeRoles([ROLES.ARTIST_MANAGER]),
-      listUsers,
-    ]);
+    compose(req, res, [authenticate, authorizeRoles([]), listUsers]);
     return true;
   }
 
@@ -31,6 +28,12 @@ function handleUserRoutes(req, res, method, path) {
   }
 
   const userIdMatch = path.match(/^\/api\/users\/(\d+)$/);
+
+  if (userIdMatch && method === "GET") {
+    req.params = { id: userIdMatch[1] };
+    compose(req, res, [authenticate, authorizeRoles([]), getUser]);
+    return true;
+  }
 
   if (userIdMatch && method === "PUT") {
     req.params = { id: userIdMatch[1] };

@@ -49,6 +49,32 @@ async function listUsers(req, res) {
   }
 }
 
+async function getUser(req, res) {
+  const userId = parseInt(req.params.id, 10);
+
+  if (Number.isNaN(userId)) {
+    return sendError(res, 400, "Invalid user id");
+  }
+
+  try {
+    const result = await query(
+      `SELECT id, first_name, last_name, email, phone, dob, gender, address, role, created_at, updated_at
+       FROM "user"
+       WHERE id = $1`,
+      [userId],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "User not found");
+    }
+
+    sendSuccess(res, result.rows[0], "User fetched");
+  } catch (err) {
+    console.error("getUser err:", err.message);
+    sendError(res, 500, "Failed to fetch user");
+  }
+}
+
 async function createUser(req, res) {
   const validation = validateCreateUser(req.body);
 
@@ -194,4 +220,4 @@ async function deleteUser(req, res) {
   }
 }
 
-module.exports = { listUsers, createUser, updateUser, deleteUser };
+module.exports = { listUsers, getUser, createUser, updateUser, deleteUser };
