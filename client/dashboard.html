@@ -6,7 +6,75 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body>
-    <p>This is dashboard page</p>
+  <body class="dashboard-page">
+    <nav class="navbar">
+      <a href="dashboard.html" class="navbar-brand">Artist Management</a>
+
+      <div class="navbar-actions">
+        <span id="user-name" class="navbar-user"></span>
+        <button id="logout-btn" type="button" class="navbar-logout">
+          Logout
+        </button>
+      </div>
+    </nav>
+
+    <main class="dashboard-content">
+      <h1>Dashboard</h1>
+
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="users">
+          Users
+        </button>
+        <button type="button" class="tab-btn" data-tab="artists">
+          Artists
+        </button>
+      </div>
+
+      <section id="users-panel" class="tab-panel active">
+        <p id="users-no-permission" class="no-permission hidden">
+          No permission
+        </p>
+
+        <div id="users-content">
+          <p id="users-error" class="error"></p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr>
+                  <td colspan="4" class="table-empty">Loading users...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="artists-panel" class="tab-panel">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Albums Released</th>
+                <th>First Release Year</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
   </body>
 </html>

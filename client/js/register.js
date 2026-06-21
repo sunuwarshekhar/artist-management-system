@@ -2,7 +2,7 @@ if (auth.isLoggedIn()) {
   window.location.href = "dashboard.html";
 }
 
-const form = document.getElementById("login-form");
+const form = document.getElementById("register-form");
 const errorMessage = document.getElementById("error");
 
 form.addEventListener("submit", async (e) => {
@@ -10,13 +10,15 @@ form.addEventListener("submit", async (e) => {
   errorMessage.textContent = "";
 
   try {
-    const res = await apiRequest("POST", "/api/auth/login", {
+    await apiRequest("POST", "/api/auth/register", {
+      first_name: form.first_name.value,
+      last_name: form.last_name.value,
       email: form.email.value,
       password: form.password.value,
+      role: form.role.value,
     });
 
-    auth.save(res.data.token, res.data.user);
-    window.location.href = "dashboard.html";
+    window.location.href = "index.html";
   } catch (error) {
     errorMessage.textContent = error.message;
   }
