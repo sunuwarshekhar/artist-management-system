@@ -28,6 +28,10 @@ const deleteUserModal = document.getElementById("delete-user-modal");
 const deleteUserMessage = document.getElementById("delete-user-message");
 const deleteUserError = document.getElementById("delete-user-error");
 const deleteUserConfirm = document.getElementById("delete-user-confirm");
+const userDetailModal = document.getElementById("user-detail-modal");
+const userDetailTitle = document.getElementById("user-detail-title");
+const userDetailContent = document.getElementById("user-detail-content");
+const userDetailError = document.getElementById("user-detail-error");
 
 let formMode = "create";
 let editingUserId = null;
@@ -40,6 +44,10 @@ const usersPagination = paginationElement(usersPaginationEl, (page) =>
 );
 
 createUserBtn.disabled = !canManageUsers;
+
+document.getElementById("user-phone")?.addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/\D/g, "");
+});
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -61,6 +69,50 @@ tabButtons.forEach((button) => {
 
 function formatRole(role) {
   return role.replace(/_/g, " ");
+}
+
+function formatGender(gender) {
+  const labels = { m: "Male", f: "Female", o: "Other" };
+  return labels[gender] || null;
+}
+
+function formatDate(value) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString();
+}
+
+function formatDateTime(value) {
+  if (!value) return null;
+  return new Date(value).toLocaleString();
+}
+
+function renderUserDetail(u) {
+  const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
+  userDetailTitle.textContent = fullName || "User Details";
+
+  const fields = [
+    { label: "First Name", value: u.first_name },
+    { label: "Last Name", value: u.last_name },
+    { label: "Email", value: u.email },
+    { label: "Role", value: formatRole(u.role) },
+    { label: "Phone", value: u.phone },
+    { label: "Date of Birth", value: formatDate(u.dob) },
+    { label: "Gender", value: formatGender(u.gender) },
+    { label: "Address", value: u.address },
+    { label: "Created At", value: formatDateTime(u.created_at) },
+    { label: "Last Updated", value: formatDateTime(u.updated_at) },
+  ];
+
+  userDetailContent.innerHTML = fields
+    .map(
+      ({ label, value }) => `
+        <div class="detail-item">
+          <span class="detail-label">${escapeHtml(label)}</span>
+          <span class="detail-value">${escapeHtml(value) || "-"}</span>
+        </div>
+      `,
+    )
+    .join("");
 }
 
 function openModal(id) {
@@ -86,6 +138,8 @@ document.addEventListener("keydown", (e) => {
     closeModal("user-form-modal");
   if (!deleteUserModal.classList.contains("hidden"))
     closeModal("delete-user-modal");
+  if (!userDetailModal.classList.contains("hidden"))
+    closeModal("user-detail-modal");
 });
 
 function renderUsersTable(users) {
@@ -113,6 +167,12 @@ function renderUsersTable(users) {
           <td>${escapeHtml(u.phone) || "-"}</td>
           <td class="col-actions-cell">
             <div class="table-actions">
+              <button
+                type="button"
+                class="btn-icon btn-view"
+                data-user-id="${u.id}"
+                title="View details"
+              ><i class="fa fa-eye" aria-hidden="true"></i></button>
               <button
                 type="button"
                 class="btn-icon btn-edit"
@@ -222,11 +282,34 @@ function openDeleteModal(userId, userName) {
   openModal("delete-user-modal");
 }
 
+async function openViewModal(userId) {
+  if (!canManageUsers) return;
+
+  userDetailError.textContent = "";
+  userDetailTitle.textContent = "User Details";
+  userDetailContent.innerHTML =
+    '<p class="table-empty">Loading user details...</p>';
+  openModal("user-detail-modal");
+
+  try {
+    const res = await apiRequest("GET", `/api/users/${userId}`);
+    renderUserDetail(res.data);
+  } catch (error) {
+    userDetailContent.innerHTML = "";
+    userDetailError.textContent = error.message;
+  }
+}
+
 createUserBtn.addEventListener("click", openCreateModal);
 
 document.getElementById("users-table-body").addEventListener("click", (e) => {
+  const viewBtn = e.target.closest(".btn-view");
   const editBtn = e.target.closest(".btn-edit");
   const deleteBtn = e.target.closest(".btn-delete");
+
+  if (viewBtn) {
+    openViewModal(Number(viewBtn.dataset.userId));
+  }
 
   if (editBtn && !editBtn.disabled) {
     openEditModal(Number(editBtn.dataset.userId));

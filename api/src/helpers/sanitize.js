@@ -4,6 +4,24 @@ function sanitizeText(value) {
   return String(value).trim().replace(/[<>]/g, "");
 }
 
+const { PHONE_MAX_LENGTH } = require("../constants/constants");
+
+function sanitizePhone(value) {
+  if (value == null || value === "") return null;
+
+  const cleaned = String(value).trim();
+
+  if (!/^\d+$/.test(cleaned)) {
+    return { error: "must contain only numbers" };
+  }
+
+  if (cleaned.length > PHONE_MAX_LENGTH) {
+    return { error: `must not exceed ${PHONE_MAX_LENGTH} digits` };
+  }
+
+  return cleaned;
+}
+
 function sanitizeName(value) {
   const raw = String(value ?? "");
 
@@ -22,4 +40,4 @@ function sanitizeName(value) {
   return cleaned;
 }
 
-module.exports = { sanitizeText, sanitizeName };
+module.exports = { sanitizeText, sanitizePhone, sanitizeName };

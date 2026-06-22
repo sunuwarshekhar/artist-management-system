@@ -170,9 +170,11 @@
               <div class="form-field">
                 <label for="user-phone">Phone</label>
                 <input
-                  type="text"
+                  type="tel"
                   id="user-phone"
                   name="phone"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                   maxlength="10"
                 />
               </div>
@@ -208,6 +210,36 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div id="user-detail-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="user-detail-modal"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 id="user-detail-title">User Details</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="user-detail-modal"
+            aria-label="Close"
+          >
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="user-detail-error" class="error"></p>
+          <div id="user-detail-content" class="detail-grid"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-close-modal="user-detail-modal"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
 

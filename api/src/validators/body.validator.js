@@ -5,7 +5,11 @@ const {
   GENDERS,
   MIN_PASSWORD_LENGTH,
 } = require("../constants/constants");
-const { sanitizeText, sanitizeName } = require("../helpers/sanitize");
+const {
+  sanitizeText,
+  sanitizeName,
+  sanitizePhone,
+} = require("../helpers/sanitize");
 
 function validateBody(schemaFn) {
   return (req, res, next) => {
@@ -79,10 +83,6 @@ function validateCreateUser(body) {
     };
   }
 
-  if (phone && sanitizeText(phone)?.length > 10) {
-    return { error: "phone must not exceed 10 characters" };
-  }
-
   if (gender && !GENDERS.includes(gender)) {
     return { error: "gender must be m, f, or o" };
   }
@@ -91,7 +91,10 @@ function validateCreateUser(body) {
     return { error: "dob must be a valid date" };
   }
 
-  const cleanPhone = phone ? sanitizeText(phone) : null;
+  const cleanPhone = sanitizePhone(phone);
+  if (cleanPhone?.error) {
+    return { error: `phone ${cleanPhone.error}` };
+  }
   const cleanAddress = address ? sanitizeText(address) : null;
 
   if (cleanAddress && cleanAddress.length > 255) {
@@ -176,9 +179,9 @@ function validateUpdateUser(body) {
   }
 
   if (phone !== undefined) {
-    const cleanPhone = phone ? sanitizeText(phone) : null;
-    if (cleanPhone && cleanPhone.length > 10) {
-      return { error: "phone number must not exceed 10 characters" };
+    const cleanPhone = sanitizePhone(phone);
+    if (cleanPhone?.error) {
+      return { error: `phone ${cleanPhone.error}` };
     }
     data.phone = cleanPhone;
   }
@@ -270,7 +273,10 @@ function validateRegister(body) {
     return { error: "dob must be a valid date" };
   }
 
-  const cleanPhone = phone ? sanitizeText(phone) : null;
+  const cleanPhone = sanitizePhone(phone);
+  if (cleanPhone?.error) {
+    return { error: `phone ${cleanPhone.error}` };
+  }
   const cleanAddress = address ? sanitizeText(address) : null;
 
   return {
