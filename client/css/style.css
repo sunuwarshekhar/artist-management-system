@@ -220,6 +220,51 @@ button {
   overflow: hidden;
 }
 
+.table-wrap-fixed .data-table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-wrap-fixed .col-name {
+  width: 24%;
+}
+
+.table-wrap-fixed .col-email {
+  width: 32%;
+}
+
+.table-wrap-fixed .col-role {
+  width: 16%;
+}
+
+.table-wrap-fixed .col-phone {
+  width: 12%;
+}
+
+.table-wrap-fixed .col-actions {
+  width: 16%;
+}
+
+.table-wrap-fixed .data-table-fixed th,
+.table-wrap-fixed .data-table-fixed td:not(.col-actions-cell) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-wrap-fixed .data-table-fixed .col-actions-cell {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.table-wrap-fixed {
+  min-height: 580px;
+}
+
+.table-wrap-fixed .data-table tbody tr {
+  height: 40px;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -301,6 +346,53 @@ button {
   background: #fee;
   border-color: #fcc;
   color: #c00;
+}
+
+.pagination-slot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 48px;
+  margin-top: 16px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.pagination.hidden {
+  display: none;
+}
+
+.pagination-btn {
+  width: auto;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: #ffffff;
+  border: 1px solid #dddddd;
+  line-height: 1;
+}
+
+.pagination-btn .fa {
+  pointer-events: none;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #555555;
 }
 
 .modal {

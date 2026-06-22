@@ -17,6 +17,7 @@ const canManageUsers = user?.role === ROLES.SUPER_ADMIN;
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabPanels = document.querySelectorAll(".tab-panel");
 const createUserBtn = document.getElementById("create-user-btn");
+const usersPaginationEl = document.getElementById("users-pagination");
 const userFormModal = document.getElementById("user-form-modal");
 const userForm = document.getElementById("user-form");
 const userFormTitle = document.getElementById("user-form-title");
@@ -31,6 +32,12 @@ const deleteUserConfirm = document.getElementById("delete-user-confirm");
 let formMode = "create";
 let editingUserId = null;
 let deletingUserId = null;
+let currentPage = 1;
+let pagination = null;
+
+const usersPagination = paginationElement(usersPaginationEl, (page) =>
+  loadUsers(page),
+);
 
 createUserBtn.disabled = !canManageUsers;
 
@@ -45,22 +52,12 @@ tabButtons.forEach((button) => {
     createUserBtn.classList.toggle("hidden", tab !== "users");
 
     if (tab === "users") {
-      loadUsers();
+      loadUsers(currentPage);
     } else if (tab === "artists") {
       loadArtists();
     }
   });
 });
-
-//to prevent XSS attacks
-function escapeHtml(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 function formatRole(role) {
   return role.replace(/_/g, " ");
@@ -106,14 +103,15 @@ function renderUsersTable(users) {
       const disabled = !canManageUsers || isSelf;
       const deleteDisabled = disabled;
       const editDisabled = !canManageUsers;
+      const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
 
       return `
         <tr>
-          <td>${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)}</td>
-          <td>${escapeHtml(u.email)}</td>
+          <td>${renderTruncated(fullName, DISPLAY_NAME_MAX)}</td>
+          <td>${renderTruncated(u.email, DISPLAY_EMAIL_MAX)}</td>
           <td>${escapeHtml(formatRole(u.role))}</td>
           <td>${escapeHtml(u.phone) || "-"}</td>
-          <td>
+          <td class="col-actions-cell">
             <div class="table-actions">
               <button
                 type="button"
@@ -126,7 +124,7 @@ function renderUsersTable(users) {
                 type="button"
                 class="btn-icon btn-icon-danger btn-delete"
                 data-user-id="${u.id}"
-                data-user-name="${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)}"
+                data-user-name="${escapeHtml(fullName)}"
                 title="${isSelf ? "Cannot delete your own account" : "Delete"}"
                 ${deleteDisabled ? "disabled" : ""}
               ><i class="fa fa-trash" aria-hidden="true"></i></button>
@@ -138,7 +136,7 @@ function renderUsersTable(users) {
     .join("");
 }
 
-async function loadUsers() {
+async function loadUsers(page = 1) {
   const tbody = document.getElementById("users-table-body");
   const errorEl = document.getElementById("users-error");
   errorEl.textContent = "";
@@ -146,19 +144,27 @@ async function loadUsers() {
   if (!canManageUsers) {
     tbody.innerHTML =
       '<tr><td colspan="5" class="table-empty">No permission to view users.</td></tr>';
+    usersPagination.hide();
     return;
   }
 
+  currentPage = page;
   tbody.innerHTML =
     '<tr><td colspan="5" class="table-empty">Loading users...</td></tr>';
 
   try {
-    const res = await apiRequest("GET", "/api/users");
+    const res = await apiRequest(
+      "GET",
+      `/api/users?page=${page}&limit=${PAGE_LIMIT}`,
+    );
+    pagination = res.data.pagination;
     renderUsersTable(res.data.users);
+    usersPagination.update(pagination);
   } catch (error) {
     errorEl.textContent = error.message;
     tbody.innerHTML =
       '<tr><td colspan="5" class="table-empty">Failed to load users.</td></tr>';
+    usersPagination.hide();
   }
 }
 
@@ -270,7 +276,7 @@ userForm.addEventListener("submit", async (e) => {
     }
 
     closeModal("user-form-modal");
-    loadUsers();
+    loadUsers(currentPage);
   } catch (error) {
     userFormError.textContent = error.message;
   } finally {
@@ -287,7 +293,7 @@ deleteUserConfirm.addEventListener("click", async () => {
   try {
     await apiRequest("DELETE", `/api/users/${deletingUserId}`);
     closeModal("delete-user-modal");
-    loadUsers();
+    loadUsers(usersPagination.getPageAfterDelete());
   } catch (error) {
     deleteUserError.textContent = error.message;
   } finally {
@@ -298,4 +304,4 @@ deleteUserConfirm.addEventListener("click", async () => {
 
 async function loadArtists() {}
 
-loadUsers();
+loadUsers(currentPage);

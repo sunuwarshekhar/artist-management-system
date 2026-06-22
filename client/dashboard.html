@@ -23,7 +23,7 @@
     </nav>
 
     <main class="dashboard-content">
-      <h1>Dashboard</h1>
+      <!-- <h1>Dashboard</h1> -->
 
       <div class="tabs-bar">
         <div class="tabs">
@@ -47,15 +47,22 @@
       <section id="users-panel" class="tab-panel active">
         <div id="users-content">
           <p id="users-error" class="error"></p>
-          <div class="table-wrap">
-            <table class="data-table">
+          <div class="table-wrap table-wrap-fixed">
+            <table class="data-table data-table-fixed">
+              <colgroup>
+                <col class="col-name" />
+                <col class="col-email" />
+                <col class="col-role" />
+                <col class="col-phone" />
+                <col class="col-actions" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
                   <th>Phone</th>
-                  <th>Actions</th>
+                  <th class="col-actions-cell">Actions</th>
                 </tr>
               </thead>
               <tbody id="users-table-body">
@@ -64,6 +71,27 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="pagination-slot">
+            <div id="users-pagination" class="pagination hidden">
+              <button
+                type="button"
+                class="pagination-btn"
+                data-pagination-prev
+                aria-label="Previous page"
+              >
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span class="pagination-info" data-pagination-info></span>
+              <button
+                type="button"
+                class="pagination-btn"
+                data-pagination-next
+                aria-label="Next page"
+              >
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -219,6 +247,8 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/text.js"></script>
+    <script src="js/pagination.js"></script>
     <script src="js/dashboard.js"></script>
   </body>
 </html>
