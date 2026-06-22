@@ -9,11 +9,28 @@ const { compose } = require("../helpers/compose");
 const { parseJsonBody } = require("../helpers/bodyParser");
 const { authenticate } = require("../middleware/auth");
 const { authorizeRoles } = require("../middleware/checkPermission");
-const { ROLES } = require("../constants/roles");
+const {
+  validateBody,
+  validateCreateUser,
+  validateUpdateUser,
+} = require("../validators/body.validator");
+const {
+  validateParams,
+  validateUserId,
+} = require("../validators/params.validator");
+const {
+  validateQuery,
+  validatePagination,
+} = require("../validators/query.validator");
 
 function handleUserRoutes(req, res, method, path) {
   if (method === "GET" && path === "/api/users") {
-    compose(req, res, [authenticate, authorizeRoles([]), listUsers]);
+    compose(req, res, [
+      authenticate,
+      authorizeRoles([]),
+      validateQuery(validatePagination, "pagination"),
+      listUsers,
+    ]);
     return true;
   }
 
@@ -22,6 +39,7 @@ function handleUserRoutes(req, res, method, path) {
       authenticate,
       authorizeRoles([]),
       parseJsonBody,
+      validateBody(validateCreateUser),
       createUser,
     ]);
     return true;
@@ -31,7 +49,12 @@ function handleUserRoutes(req, res, method, path) {
 
   if (userIdMatch && method === "GET") {
     req.params = { id: userIdMatch[1] };
-    compose(req, res, [authenticate, authorizeRoles([]), getUser]);
+    compose(req, res, [
+      authenticate,
+      authorizeRoles([]),
+      validateParams(validateUserId),
+      getUser,
+    ]);
     return true;
   }
 
@@ -41,6 +64,8 @@ function handleUserRoutes(req, res, method, path) {
       authenticate,
       authorizeRoles([]),
       parseJsonBody,
+      validateParams(validateUserId),
+      validateBody(validateUpdateUser),
       updateUser,
     ]);
     return true;
@@ -48,7 +73,12 @@ function handleUserRoutes(req, res, method, path) {
 
   if (userIdMatch && method === "DELETE") {
     req.params = { id: userIdMatch[1] };
-    compose(req, res, [authenticate, authorizeRoles([]), deleteUser]);
+    compose(req, res, [
+      authenticate,
+      authorizeRoles([]),
+      validateParams(validateUserId),
+      deleteUser,
+    ]);
     return true;
   }
 

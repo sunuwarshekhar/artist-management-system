@@ -3,15 +3,20 @@ const { sendSuccess } = require("../helpers/response");
 const { compose } = require("../helpers/compose");
 const { parseJsonBody } = require("../helpers/bodyParser");
 const { authenticate } = require("../middleware/auth");
+const {
+  validateBody,
+  validateRegister,
+  validateLogin,
+} = require("../validators/body.validator");
 
 function handleAuthRoutes(req, res, method, path) {
   if (method === "POST" && path === "/api/auth/login") {
-    compose(req, res, [parseJsonBody, login]);
+    compose(req, res, [parseJsonBody, validateBody(validateLogin), login]);
     return true;
   }
 
   if (method === "POST" && path === "/api/auth/register") {
-    compose(req, res, [parseJsonBody, register]);
+    compose(req, res, [parseJsonBody, validateBody(validateRegister), register]);
     return true;
   }
 

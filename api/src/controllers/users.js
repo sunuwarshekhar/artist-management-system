@@ -1,20 +1,9 @@
 const bcrypt = require("bcrypt");
 const { query } = require("../database/config");
-const { parsePagination } = require("../helpers/pagination");
 const { sendError, sendSuccess } = require("../helpers/response");
-const {
-  validateCreateUser,
-  validateUpdateUser,
-} = require("../helpers/validateUser");
 
 async function listUsers(req, res) {
-  const pagination = parsePagination(req);
-
-  if (pagination.error) {
-    return sendError(res, 400, pagination.error);
-  }
-
-  const { page, limit, offset } = pagination;
+  const { page, limit, offset } = req.pagination;
 
   try {
     const countResult = await query(
@@ -50,11 +39,7 @@ async function listUsers(req, res) {
 }
 
 async function getUser(req, res) {
-  const userId = parseInt(req.params.id, 10);
-
-  if (Number.isNaN(userId)) {
-    return sendError(res, 400, "Invalid user id");
-  }
+  const userId = req.params.id;
 
   try {
     const result = await query(
@@ -76,12 +61,6 @@ async function getUser(req, res) {
 }
 
 async function createUser(req, res) {
-  const validation = validateCreateUser(req.body);
-
-  if (validation.error) {
-    return sendError(res, 400, validation.error);
-  }
-
   const {
     first_name,
     last_name,
@@ -92,7 +71,7 @@ async function createUser(req, res) {
     dob,
     gender,
     address,
-  } = validation.data;
+  } = req.body;
 
   try {
     const existing = await query('SELECT id FROM "user" WHERE email = $1', [
@@ -131,19 +110,8 @@ async function createUser(req, res) {
 }
 
 async function updateUser(req, res) {
-  const userId = parseInt(req.params.id, 10);
-
-  if (Number.isNaN(userId)) {
-    return sendError(res, 400, "Invalid user id");
-  }
-
-  const validation = validateUpdateUser(req.body);
-
-  if (validation.error) {
-    return sendError(res, 400, validation.error);
-  }
-
-  const data = validation.data;
+  const userId = req.params.id;
+  const data = req.body;
 
   try {
     const existing = await query('SELECT id FROM "user" WHERE id = $1', [
@@ -193,11 +161,7 @@ async function updateUser(req, res) {
 }
 
 async function deleteUser(req, res) {
-  const userId = parseInt(req.params.id, 10);
-
-  if (Number.isNaN(userId)) {
-    return sendError(res, 400, "Invalid user id");
-  }
+  const userId = req.params.id;
 
   if (userId === req.user.id) {
     return sendError(res, 400, "Cannot delete your own account");

@@ -2,14 +2,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { query } = require("../database/config");
 const { sendError, sendSuccess } = require("../helpers/response");
-const { ROLES, ALL_ROLES } = require("../constants/roles");
 
 async function login(req, res) {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return sendError(res, 400, "Email and password are required");
-  }
 
   try {
     const result = await query(
@@ -67,19 +62,6 @@ async function register(req, res) {
     role,
   } = req.body;
 
-  if (!first_name || !last_name || !email || !password) {
-    return sendError(
-      res,
-      400,
-      "first name, last name, email and password are required",
-    );
-  }
-
-  const userRole = role || ROLES.ARTIST;
-  if (!ALL_ROLES.includes(userRole)) {
-    return sendError(res, 400, "Invalid role");
-  }
-
   try {
     const existing = await query('SELECT id FROM "user" WHERE email = $1', [
       email,
@@ -101,11 +83,11 @@ async function register(req, res) {
         last_name,
         email,
         hashedPassword,
-        phone || null,
-        dob || null,
-        gender || null,
-        address || null,
-        userRole,
+        phone,
+        dob,
+        gender,
+        address,
+        role,
       ],
     );
 
