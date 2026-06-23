@@ -4,6 +4,7 @@ const {
   EMAIL_REGEX,
   GENDERS,
   MIN_PASSWORD_LENGTH,
+  MUSIC_GENRES,
 } = require("../constants/constants");
 const {
   sanitizeText,
@@ -513,12 +514,59 @@ function validateLogin(body) {
   };
 }
 
+function validateCreateMusic(body) {
+  const { title, album_name, genre } = body;
+
+  if (!title?.trim()) {
+    return { error: "title is required" };
+  }
+
+  const cleanTitle = sanitizeText(title);
+  if (!cleanTitle) {
+    return { error: "title is required" };
+  }
+
+  if (cleanTitle.length > 255) {
+    return { error: "title must not exceed 255 characters" };
+  }
+
+  if (!album_name?.trim()) {
+    return { error: "album name is required" };
+  }
+
+  const cleanAlbumName = sanitizeText(album_name);
+  if (!cleanAlbumName) {
+    return { error: "album name is required" };
+  }
+
+  if (cleanAlbumName.length > 255) {
+    return { error: "album name must not exceed 255 characters" };
+  }
+
+  if (!genre) {
+    return { error: "genre is required" };
+  }
+
+  if (!MUSIC_GENRES.includes(genre)) {
+    return {
+      error: `genre must be one of: ${MUSIC_GENRES.join(", ")}`,
+    };
+  }
+
+  return {
+    title: cleanTitle,
+    album_name: cleanAlbumName,
+    genre,
+  };
+}
+
 module.exports = {
   validateBody,
   validateCreateUser,
   validateUpdateUser,
   validateCreateArtist,
   validateUpdateArtist,
+  validateCreateMusic,
   validateRegister,
   validateLogin,
 };

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile Pending</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="dashboard-page">
+    <nav class="navbar">
+      <span class="navbar-brand">Artist Management</span>
+
+      <div class="navbar-actions">
+        <span id="user-name" class="navbar-user"></span>
+        <button id="logout-btn" type="button" class="navbar-logout">
+          Logout
+        </button>
+      </div>
+    </nav>
+
+    <main class="dashboard-content">
+      <div class="profile-pending-card">
+        <h1>Artist profile not completed!!</h1>
+        <p>
+          Your artist profile has not been created yet. Please contact your
+          manager.
+        </p>
+        <p class="profile-pending-note">
+          Once your profile is ready, please try logging in again later.
+        </p>
+      </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/profile-pending.js"></script>
+  </body>
+</html>

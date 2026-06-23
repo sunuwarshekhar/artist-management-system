@@ -95,3 +95,21 @@ curl -i -X POST http://localhost:5000/api/auth/register \
   curl -i -X DELETE http://localhost:5000/api/artists/${id} \
   -H "Authorization: Bearer TOKEN"
 
+  "list artist songs"
+  curl -i "http://localhost:5000/api/artists/${id}/music?page=1&limit=10" \
+  -H "Authorization: Bearer TOKEN"
+
+  "create artist song"
+  curl -i -X POST http://localhost:5000/api/artists/${id}/music \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Song",
+    "album_name": "My Album",
+    "genre": "rock"
+  }'
+
+  "my artist profile"
+  curl -i http://localhost:5000/api/artists/me \
+  -H "Authorization: Bearer TOKEN"
+

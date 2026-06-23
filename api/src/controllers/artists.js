@@ -210,6 +210,116 @@ async function deleteArtist(req, res) {
   }
 }
 
+async function getMyArtist(req, res) {
+  try {
+    const result = await query(
+      `SELECT id, user_id, name, dob, gender, address, first_release_year,
+              no_of_albums_released, created_at, updated_at
+       FROM "artist"
+       WHERE user_id = $1`,
+      [req.user.id],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "Artist profile not found");
+    }
+
+    sendSuccess(res, result.rows[0], "Artist profile fetched");
+  } catch (err) {
+    console.error("getMyArtist err:", err.message);
+    sendError(res, 500, "Failed to fetch artist profile");
+  }
+}
+
+async function createArtistMusic(req, res) {
+  const artistId = req.params.id;
+  const { title, album_name, genre } = req.body;
+
+  try {
+    const artistResult = await query(
+      'SELECT id, user_id FROM "artist" WHERE id = $1',
+      [artistId],
+    );
+
+    if (artistResult.rowCount === 0) {
+      return sendError(res, 404, "Artist not found");
+    }
+
+    const artist = artistResult.rows[0];
+
+    if (artist.user_id !== req.user.id) {
+      return sendError(res, 403, "No Permission");
+    }
+
+    const result = await query(
+      `INSERT INTO "music" (artist_id, title, album_name, genre)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, artist_id, title, album_name, genre, created_at, updated_at`,
+      [artistId, title, album_name, genre],
+    );
+
+    sendSuccess(res, result.rows[0], "Song created", 201);
+  } catch (err) {
+    console.error("createArtistMusic err:", err.message);
+    sendError(res, 500, "Failed to create song");
+  }
+}
+
+async function listArtistMusic(req, res) {
+  const artistId = req.params.id;
+  const { page, limit, offset } = req.pagination;
+
+  try {
+    const artistResult = await query(
+      'SELECT id, name, user_id FROM "artist" WHERE id = $1',
+      [artistId],
+    );
+
+    if (artistResult.rowCount === 0) {
+      return sendError(res, 404, "Artist not found");
+    }
+
+    const artist = artistResult.rows[0];
+
+    if (req.user.role === ROLES.ARTIST && artist.user_id !== req.user.id) {
+      return sendError(res, 403, "No Permission");
+    }
+
+    const countResult = await query(
+      'SELECT COUNT(*)::int AS total FROM "music" WHERE artist_id = $1',
+      [artistId],
+    );
+    const total = countResult.rows[0].total;
+
+    const result = await query(
+      `SELECT id, artist_id, title, album_name, genre, created_at, updated_at
+       FROM "music"
+       WHERE artist_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [artistId, limit, offset],
+    );
+
+    sendSuccess(
+      res,
+      {
+        artist: { id: artist.id, name: artist.name },
+        songs: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit) || 0,
+        },
+      },
+      "Songs list fetched",
+    );
+  } catch (err) {
+    console.error("listArtistMusic err:", err.message);
+    sendError(res, 500, "Failed to fetch songs");
+  }
+}
+
 module.exports = {
   listArtists,
   listUnlinkedArtistUsers,
@@ -217,4 +327,7 @@ module.exports = {
   getArtist,
   updateArtist,
   deleteArtist,
+  getMyArtist,
+  createArtistMusic,
+  listArtistMusic,
 };

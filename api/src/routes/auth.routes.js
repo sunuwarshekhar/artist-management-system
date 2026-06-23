@@ -1,5 +1,4 @@
-const { login, register } = require("../controllers/auth");
-const { sendSuccess } = require("../helpers/response");
+const { login, register, getMe } = require("../controllers/auth");
 const { compose } = require("../helpers/compose");
 const { parseJsonBody } = require("../helpers/bodyParser");
 const { authenticate } = require("../middleware/auth");
@@ -21,12 +20,7 @@ function handleAuthRoutes(req, res, method, path) {
   }
 
   if (method === "GET" && path === "/api/auth/me") {
-    compose(req, res, [
-      authenticate,
-      (req, res) => {
-        sendSuccess(res, req.user, "authenticated user");
-      },
-    ]);
+    compose(req, res, [authenticate, getMe]);
     return true;
   }
 

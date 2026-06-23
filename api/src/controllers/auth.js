@@ -1,7 +1,27 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { query } = require("../database/config");
+const { ROLES } = require("../constants/roles");
 const { sendError, sendSuccess } = require("../helpers/response");
+
+async function getArtistIdForUser(userId) {
+  const artistResult = await query(
+    'SELECT id FROM "artist" WHERE user_id = $1',
+    [userId],
+  );
+  return artistResult.rowCount > 0 ? artistResult.rows[0].id : null;
+}
+
+function toAuthUser(user, artist_id = null) {
+  return {
+    id: user.id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    role: user.role,
+    artist_id,
+  };
+}
 
 async function login(req, res) {
   const { email, password } = req.body;
@@ -29,17 +49,16 @@ async function login(req, res) {
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
     );
 
+    let artist_id = null;
+    if (user.role === ROLES.ARTIST) {
+      artist_id = await getArtistIdForUser(user.id);
+    }
+
     sendSuccess(
       res,
       {
         token,
-        user: {
-          id: user.id,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          role: user.role,
-        },
+        user: toAuthUser(user, artist_id),
       },
       "Login successful",
     );
@@ -98,4 +117,28 @@ async function register(req, res) {
   }
 }
 
-module.exports = { login, register };
+async function getMe(req, res) {
+  try {
+    const result = await query(
+      'SELECT id, first_name, last_name, email, role FROM "user" WHERE id = $1',
+      [req.user.id],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 401, "User not found");
+    }
+
+    const user = result.rows[0];
+    let artist_id = null;
+    if (user.role === ROLES.ARTIST) {
+      artist_id = await getArtistIdForUser(user.id);
+    }
+
+    sendSuccess(res, toAuthUser(user, artist_id), "authenticated user");
+  } catch (err) {
+    console.error("getMe err:", err.message);
+    sendError(res, 500, "Failed to fetch user");
+  }
+}
+
+module.exports = { login, register, getMe };

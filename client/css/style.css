@@ -251,20 +251,100 @@ button {
   width: 20%;
 }
 
-#artists-panel .table-wrap-fixed .col-name {
-  width: 32%;
-}
-
-#artists-panel .table-wrap-fixed .col-albums {
-  width: 22%;
-}
-
-#artists-panel .table-wrap-fixed .col-year {
-  width: 22%;
-}
-
+#artists-panel .table-wrap-fixed .col-name,
+#artists-panel .table-wrap-fixed .col-albums,
+#artists-panel .table-wrap-fixed .col-year,
 #artists-panel .table-wrap-fixed .col-actions {
-  width: 24%;
+  width: 25%;
+}
+
+.songs-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.songs-header-main {
+  min-width: 0;
+}
+
+.songs-header .btn-create-user {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.songs-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.songs-back-link:hover {
+  color: #000;
+}
+
+.songs-page-title {
+  font-size: 20px;
+  margin: 0;
+}
+
+.profile-pending-card {
+  max-width: 520px;
+  margin: 48px auto 0;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.profile-pending-card h1 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.profile-pending-card p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.profile-pending-note {
+  color: #666;
+  font-size: 13px;
+}
+
+.col-song-title {
+  width: 40%;
+}
+
+.col-song-album {
+  width: 35%;
+}
+
+.col-song-genre {
+  width: 25%;
+}
+
+a.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.btn-songs:hover {
+  background: #f0f4ff;
+  border-color: #cce;
 }
 
 .table-wrap-fixed .data-table-fixed th,
@@ -280,7 +360,7 @@ button {
 }
 
 .table-wrap-fixed {
-  min-height: 540px;
+  min-height: 560px;
 }
 
 .table-wrap-fixed .data-table tbody tr {

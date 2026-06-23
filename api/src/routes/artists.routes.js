@@ -5,6 +5,9 @@ const {
   getArtist,
   updateArtist,
   deleteArtist,
+  getMyArtist,
+  createArtistMusic,
+  listArtistMusic,
 } = require("../controllers/artists");
 const { compose } = require("../helpers/compose");
 const { parseJsonBody } = require("../helpers/bodyParser");
@@ -15,6 +18,7 @@ const {
   validateBody,
   validateCreateArtist,
   validateUpdateArtist,
+  validateCreateMusic,
 } = require("../validators/body.validator");
 const {
   validateParams,
@@ -54,6 +58,46 @@ function handleArtistRoutes(req, res, method, path) {
       parseJsonBody,
       validateBody(validateCreateArtist),
       createArtist,
+    ]);
+    return true;
+  }
+
+  if (method === "GET" && path === "/api/artists/me") {
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST]),
+      getMyArtist,
+    ]);
+    return true;
+  }
+
+  const artistMusicMatch = path.match(/^\/api\/artists\/(\d+)\/music$/);
+
+  if (artistMusicMatch && method === "GET") {
+    req.params = { id: artistMusicMatch[1] };
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([
+        ROLES.SUPER_ADMIN,
+        ROLES.ARTIST_MANAGER,
+        ROLES.ARTIST,
+      ]),
+      validateParams(validateArtistId),
+      validateQuery(validatePagination, "pagination"),
+      listArtistMusic,
+    ]);
+    return true;
+  }
+
+  if (artistMusicMatch && method === "POST") {
+    req.params = { id: artistMusicMatch[1] };
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST]),
+      parseJsonBody,
+      validateParams(validateArtistId),
+      validateBody(validateCreateMusic),
+      createArtistMusic,
     ]);
     return true;
   }

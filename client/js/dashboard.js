@@ -1,8 +1,12 @@
-if (!auth.isLoggedIn()) {
-  window.location.href = "index.html";
-}
+(async () => {
+  const user = await auth.requireAuth();
+  if (!user) return;
 
-const user = auth.getUser();
+  if (user.role === ROLES.ARTIST) {
+    window.location.href = auth.getPostLoginRedirect(user);
+    return;
+  }
+
 const userNameEl = document.getElementById("user-name");
 if (userNameEl && user) {
   userNameEl.textContent = `Hi ${user.first_name}`;
@@ -15,6 +19,7 @@ document.getElementById("logout-btn")?.addEventListener("click", () => {
 const canManageUsers = user?.role === ROLES.SUPER_ADMIN;
 const canViewArtists =
   user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ARTIST_MANAGER;
+const canViewArtistSongs = canViewArtists;
 const canManageArtists = user?.role === ROLES.ARTIST_MANAGER;
 const canCreateArtists = canManageArtists;
 
@@ -82,27 +87,52 @@ document.getElementById("user-phone")?.addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/\D/g, "");
 });
 
+function switchTab(tab, { updateUrl = true } = {}) {
+  if (tab === "artists" && !canViewArtists) {
+    tab = "users";
+  }
+  if (tab !== "users" && tab !== "artists") {
+    tab = "users";
+  }
+
+  tabButtons.forEach((btn) =>
+    btn.classList.toggle("active", btn.dataset.tab === tab),
+  );
+  tabPanels.forEach((panel) =>
+    panel.classList.toggle("active", panel.id === `${tab}-panel`),
+  );
+  createUserBtn.classList.toggle("hidden", tab !== "users");
+  createArtistBtn.classList.toggle(
+    "hidden",
+    tab !== "artists" || !canCreateArtists,
+  );
+
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    if (tab === "users") {
+      url.searchParams.delete("tab");
+    } else {
+      url.searchParams.set("tab", tab);
+    }
+    history.replaceState({ tab }, "", url);
+  }
+
+  if (tab === "users") {
+    loadUsers(currentPage);
+  } else {
+    loadArtists(artistsCurrentPage);
+  }
+}
+
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const tab = button.dataset.tab;
-    if (tab === "artists" && !canViewArtists) return;
-
-    tabButtons.forEach((btn) => btn.classList.toggle("active", btn === button));
-    tabPanels.forEach((panel) =>
-      panel.classList.toggle("active", panel.id === `${tab}-panel`),
-    );
-    createUserBtn.classList.toggle("hidden", tab !== "users");
-    createArtistBtn.classList.toggle(
-      "hidden",
-      tab !== "artists" || !canCreateArtists,
-    );
-
-    if (tab === "users") {
-      loadUsers(currentPage);
-    } else if (tab === "artists") {
-      loadArtists(artistsCurrentPage);
-    }
+    switchTab(button.dataset.tab);
   });
+});
+
+window.addEventListener("popstate", () => {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  switchTab(tab, { updateUrl: false });
 });
 
 function formatRole(role) {
@@ -478,6 +508,18 @@ function renderArtistsTable(artists) {
           <td>${escapeHtml(a.first_release_year) || "-"}</td>
           <td class="col-actions-cell">
             <div class="table-actions">
+              ${
+                canViewArtistSongs
+                  ? `
+              <button
+                type="button"
+                class="btn-icon btn-songs"
+                data-artist-id="${a.id}"
+                title="View songs"
+              ><i class="fa fa-music" aria-hidden="true"></i></button>
+              `
+                  : ""
+              }
               <button
                 type="button"
                 class="btn-icon btn-edit"
@@ -685,8 +727,14 @@ function getArtistFormData() {
 createArtistBtn.addEventListener("click", openCreateArtistModal);
 
 document.getElementById("artists-table-body").addEventListener("click", (e) => {
+  const songsBtn = e.target.closest(".btn-songs");
   const editBtn = e.target.closest(".btn-edit");
   const deleteBtn = e.target.closest(".btn-delete");
+
+  if (songsBtn?.dataset.artistId) {
+    window.location.href = auth.getSongsPageUrl(Number(songsBtn.dataset.artistId));
+    return;
+  }
 
   if (editBtn?.dataset.artistId) {
     openEditArtistModal(Number(editBtn.dataset.artistId));
@@ -748,4 +796,8 @@ deleteArtistConfirm.addEventListener("click", async () => {
   }
 });
 
-loadUsers(currentPage);
+const initialTab = new URLSearchParams(window.location.search).get("tab");
+switchTab(initialTab === "artists" && canViewArtists ? "artists" : "users", {
+  updateUrl: false,
+});
+})();
