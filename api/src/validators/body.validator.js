@@ -174,7 +174,9 @@ function validateUpdateUser(body) {
     if (!role) {
       return { error: "role is required" };
     }
-    if (![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER, ROLES.ARTIST].includes(role)) {
+    if (
+      ![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER, ROLES.ARTIST].includes(role)
+    ) {
       return {
         error: "super admin, artist manager, or artist roles are allowed",
       };
@@ -367,13 +369,12 @@ function validateCreateArtist(body) {
     }
   }
 
-  if (
-    no_of_albums_released !== undefined &&
-    no_of_albums_released !== null
-  ) {
+  if (no_of_albums_released !== undefined && no_of_albums_released !== null) {
     const albums = Number(no_of_albums_released);
     if (!Number.isInteger(albums) || albums < 0) {
-      return { error: "number of albums released must be a non-negative integer" };
+      return {
+        error: "number of albums released must be a non-negative integer",
+      };
     }
   }
 
@@ -392,6 +393,103 @@ function validateCreateArtist(body) {
         ? Number(no_of_albums_released)
         : 0,
   };
+}
+
+function validateUpdateArtist(body) {
+  const {
+    name,
+    dob,
+    gender,
+    address,
+    first_release_year,
+    no_of_albums_released,
+  } = body;
+
+  const hasField =
+    name !== undefined ||
+    dob !== undefined ||
+    gender !== undefined ||
+    address !== undefined ||
+    first_release_year !== undefined ||
+    no_of_albums_released !== undefined;
+
+  if (!hasField) {
+    return { error: "minimum one field is required" };
+  }
+
+  const data = {};
+
+  if (name !== undefined) {
+    if (!name?.trim()) {
+      return { error: "name cannot be empty" };
+    }
+    const cleanName = sanitizeName(name);
+    if (cleanName.error) {
+      return { error: `name ${cleanName.error}` };
+    }
+    data.name = cleanName;
+  }
+
+  if (gender !== undefined) {
+    if (!gender) {
+      return { error: "gender is required" };
+    }
+    if (!GENDERS.includes(gender)) {
+      return { error: "gender must be m, f, or o" };
+    }
+    data.gender = gender;
+  }
+
+  if (dob !== undefined) {
+    if (!dob) {
+      return { error: "dob is required" };
+    }
+    if (Number.isNaN(Date.parse(dob))) {
+      return { error: "dob must be a valid date" };
+    }
+    data.dob = dob;
+  }
+
+  if (address !== undefined) {
+    if (!address?.trim()) {
+      return { error: "address is required" };
+    }
+    const cleanAddress = sanitizeText(address);
+    if (!cleanAddress) {
+      return { error: "address is required" };
+    }
+    if (cleanAddress.length > 255) {
+      return { error: "address must not exceed 255 characters" };
+    }
+    data.address = cleanAddress;
+  }
+
+  if (first_release_year !== undefined) {
+    if (first_release_year === null || first_release_year === "") {
+      data.first_release_year = null;
+    } else {
+      const year = Number(first_release_year);
+      const currentYear = new Date().getFullYear();
+      if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
+        return {
+          error: `first release year must be between 1900 and ${currentYear}`,
+        };
+      }
+      data.first_release_year = year;
+    }
+  }
+
+  if (no_of_albums_released !== undefined) {
+    const albums = Number(no_of_albums_released);
+    if (!Number.isInteger(albums) || albums < 0) {
+      return {
+        error: "number of albums released must be a non-negative integer",
+      };
+    }
+    data.no_of_albums_released = albums;
+  }
+
+  return data;
 }
 
 function validateLogin(body) {
@@ -420,6 +518,7 @@ module.exports = {
   validateCreateUser,
   validateUpdateUser,
   validateCreateArtist,
+  validateUpdateArtist,
   validateRegister,
   validateLogin,
 };

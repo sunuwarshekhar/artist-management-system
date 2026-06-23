@@ -2,6 +2,9 @@ const {
   listArtists,
   listUnlinkedArtistUsers,
   createArtist,
+  getArtist,
+  updateArtist,
+  deleteArtist,
 } = require("../controllers/artists");
 const { compose } = require("../helpers/compose");
 const { parseJsonBody } = require("../helpers/bodyParser");
@@ -11,7 +14,12 @@ const { ROLES } = require("../constants/roles");
 const {
   validateBody,
   validateCreateArtist,
+  validateUpdateArtist,
 } = require("../validators/body.validator");
+const {
+  validateParams,
+  validateArtistId,
+} = require("../validators/params.validator");
 const {
   validateQuery,
   validatePagination,
@@ -46,6 +54,43 @@ function handleArtistRoutes(req, res, method, path) {
       parseJsonBody,
       validateBody(validateCreateArtist),
       createArtist,
+    ]);
+    return true;
+  }
+
+  const artistIdMatch = path.match(/^\/api\/artists\/(\d+)$/);
+
+  if (artistIdMatch && method === "GET") {
+    req.params = { id: artistIdMatch[1] };
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
+      validateParams(validateArtistId),
+      getArtist,
+    ]);
+    return true;
+  }
+
+  if (artistIdMatch && method === "PUT") {
+    req.params = { id: artistIdMatch[1] };
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
+      parseJsonBody,
+      validateParams(validateArtistId),
+      validateBody(validateUpdateArtist),
+      updateArtist,
+    ]);
+    return true;
+  }
+
+  if (artistIdMatch && method === "DELETE") {
+    req.params = { id: artistIdMatch[1] };
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
+      validateParams(validateArtistId),
+      deleteArtist,
     ]);
     return true;
   }

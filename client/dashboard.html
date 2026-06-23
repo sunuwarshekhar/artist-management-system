@@ -113,17 +113,19 @@
                 <col class="col-name" />
                 <col class="col-albums" />
                 <col class="col-year" />
+                <col class="col-actions" />
               </colgroup>
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Albums Released</th>
                   <th>First Release Year</th>
+                  <th class="col-actions-cell">Actions</th>
                 </tr>
               </thead>
               <tbody id="artists-table-body">
                 <tr>
-                  <td colspan="3" class="table-empty">Loading artists...</td>
+                  <td colspan="4" class="table-empty">Loading artists...</td>
                 </tr>
               </tbody>
             </table>
@@ -157,7 +159,7 @@
       <div class="modal-backdrop" data-close-modal="artist-form-modal"></div>
       <div class="modal-dialog">
         <div class="modal-header">
-          <h2>Create Artist</h2>
+          <h2 id="artist-form-title">Create Artist</h2>
           <button
             type="button"
             class="modal-close"
@@ -171,7 +173,7 @@
           <div class="modal-body">
             <p id="artist-form-error" class="error"></p>
             <div class="form-grid">
-              <div class="form-field form-field-full">
+              <div class="form-field form-field-full" id="artist-user-field">
                 <label for="artist-user-search">Artist User</label>
                 <div class="combobox" id="artist-user-combobox">
                   <input type="hidden" id="artist-user-id" name="user_id" />
@@ -230,7 +232,12 @@
               </div>
               <div class="form-field form-field-full">
                 <label for="artist-address">Address</label>
-                <input type="text" id="artist-address" name="address" required />
+                <input
+                  type="text"
+                  id="artist-address"
+                  name="address"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -247,6 +254,39 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div id="delete-artist-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="delete-artist-modal"></div>
+      <div class="modal-dialog modal-dialog-sm">
+        <div class="modal-header">
+          <h2>Delete Artist</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="delete-artist-modal"
+            aria-label="Close"
+          >
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="delete-artist-message"></p>
+          <p id="delete-artist-error" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-close-modal="delete-artist-modal"
+          >
+            Cancel
+          </button>
+          <button type="button" id="delete-artist-confirm" class="btn-danger">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
 

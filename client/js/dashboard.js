@@ -15,7 +15,8 @@ document.getElementById("logout-btn")?.addEventListener("click", () => {
 const canManageUsers = user?.role === ROLES.SUPER_ADMIN;
 const canViewArtists =
   user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ARTIST_MANAGER;
-const canCreateArtists = user?.role === ROLES.ARTIST_MANAGER;
+const canManageArtists = user?.role === ROLES.ARTIST_MANAGER;
+const canCreateArtists = canManageArtists;
 
 const artistsTabBtn = document.querySelector('[data-tab="artists"]');
 
@@ -41,13 +42,22 @@ const userDetailContent = document.getElementById("user-detail-content");
 const userDetailError = document.getElementById("user-detail-error");
 const artistFormModal = document.getElementById("artist-form-modal");
 const artistForm = document.getElementById("artist-form");
+const artistFormTitle = document.getElementById("artist-form-title");
 const artistFormError = document.getElementById("artist-form-error");
 const artistFormSubmit = document.getElementById("artist-form-submit");
+const artistUserField = document.getElementById("artist-user-field");
 const artistUserIdInput = document.getElementById("artist-user-id");
 const artistUserSearchInput = document.getElementById("artist-user-search");
 const artistUserOptionsEl = document.getElementById("artist-user-options");
+const deleteArtistModal = document.getElementById("delete-artist-modal");
+const deleteArtistMessage = document.getElementById("delete-artist-message");
+const deleteArtistError = document.getElementById("delete-artist-error");
+const deleteArtistConfirm = document.getElementById("delete-artist-confirm");
 
 let formMode = "create";
+let artistFormMode = "create";
+let editingArtistId = null;
+let deletingArtistId = null;
 let editingUserId = null;
 let deletingUserId = null;
 let currentPage = 1;
@@ -166,6 +176,8 @@ document.addEventListener("keydown", (e) => {
     closeModal("user-form-modal");
   if (!artistFormModal.classList.contains("hidden"))
     closeModal("artist-form-modal");
+  if (!deleteArtistModal.classList.contains("hidden"))
+    closeModal("delete-artist-modal");
   if (!deleteUserModal.classList.contains("hidden"))
     closeModal("delete-user-modal");
   if (!userDetailModal.classList.contains("hidden"))
@@ -207,7 +219,7 @@ function renderUsersTable(users) {
                 type="button"
                 class="btn-icon btn-edit"
                 data-user-id="${u.id}"
-                title="Edit"
+                title="${editDisabled ? "No permission" : "Edit"}"
                 ${editDisabled ? "disabled" : ""}
               ><i class="fa fa-pencil" aria-hidden="true"></i></button>
               <button
@@ -215,7 +227,7 @@ function renderUsersTable(users) {
                 class="btn-icon btn-icon-danger btn-delete"
                 data-user-id="${u.id}"
                 data-user-name="${escapeHtml(fullName)}"
-                title="${isSelf ? "Cannot delete your own account" : "Delete"}"
+                title="${isSelf ? "Cannot delete your own account" : deleteDisabled ? "No permission" : "Delete"}"
                 ${deleteDisabled ? "disabled" : ""}
               ><i class="fa fa-trash" aria-hidden="true"></i></button>
             </div>
@@ -422,14 +434,14 @@ async function loadArtists(page = 1) {
 
   if (!canViewArtists) {
     tbody.innerHTML =
-      '<tr><td colspan="3" class="table-empty">No permission to view artists.</td></tr>';
+      '<tr><td colspan="4" class="table-empty">No permission to view artists.</td></tr>';
     artistsPagination.hide();
     return;
   }
 
   artistsCurrentPage = page;
   tbody.innerHTML =
-    '<tr><td colspan="3" class="table-empty">Loading artists...</td></tr>';
+    '<tr><td colspan="4" class="table-empty">Loading artists...</td></tr>';
 
   try {
     const res = await apiRequest(
@@ -441,7 +453,7 @@ async function loadArtists(page = 1) {
   } catch (error) {
     errorEl.textContent = error.message;
     tbody.innerHTML =
-      '<tr><td colspan="3" class="table-empty">Failed to load artists.</td></tr>';
+      '<tr><td colspan="4" class="table-empty">Failed to load artists.</td></tr>';
     artistsPagination.hide();
   }
 }
@@ -451,32 +463,102 @@ function renderArtistsTable(artists) {
 
   if (!artists.length) {
     tbody.innerHTML =
-      '<tr><td colspan="3" class="table-empty">No artists found.</td></tr>';
+      '<tr><td colspan="4" class="table-empty">No artists found.</td></tr>';
     return;
   }
 
   tbody.innerHTML = artists
-    .map(
-      (a) => `
+    .map((a) => {
+      const noPermission = !canManageArtists;
+
+      return `
         <tr>
           <td>${renderTruncated(a.name, DISPLAY_NAME_MAX)}</td>
           <td>${escapeHtml(a.no_of_albums_released ?? 0)}</td>
           <td>${escapeHtml(a.first_release_year) || "-"}</td>
+          <td class="col-actions-cell">
+            <div class="table-actions">
+              <button
+                type="button"
+                class="btn-icon btn-edit"
+                data-artist-id="${a.id}"
+                title="${noPermission ? "No permission" : "Edit"}"
+                ${noPermission ? "disabled" : ""}
+              ><i class="fa fa-pencil" aria-hidden="true"></i></button>
+              <button
+                type="button"
+                class="btn-icon btn-icon-danger btn-delete"
+                data-artist-id="${a.id}"
+                data-artist-name="${escapeHtml(a.name)}"
+                title="${noPermission ? "No permission" : "Delete"}"
+                ${noPermission ? "disabled" : ""}
+              ><i class="fa fa-trash" aria-hidden="true"></i></button>
+            </div>
+          </td>
         </tr>
-      `,
-    )
+      `;
+    })
     .join("");
 }
 
 function openCreateArtistModal() {
   if (!canCreateArtists) return;
 
+  artistFormMode = "create";
+  editingArtistId = null;
+  artistFormTitle.textContent = "Create Artist";
+  artistFormSubmit.textContent = "Create";
+  artistUserField.classList.remove("hidden");
+  artistUserSearchInput.required = true;
   artistForm.reset();
   resetArtistUserPicker();
   document.getElementById("artist-albums").value = "0";
   artistFormError.textContent = "";
   openModal("artist-form-modal");
   loadUnlinkedArtistUsers("");
+}
+
+async function openEditArtistModal(artistId) {
+  if (!canManageArtists) return;
+
+  artistFormMode = "edit";
+  editingArtistId = artistId;
+  artistFormTitle.textContent = "Edit Artist";
+  artistFormSubmit.textContent = "Save";
+  artistUserField.classList.add("hidden");
+  artistUserSearchInput.required = false;
+  artistForm.reset();
+  resetArtistUserPicker();
+  artistFormError.textContent = "";
+  openModal("artist-form-modal");
+
+  try {
+    const res = await apiRequest("GET", `/api/artists/${artistId}`);
+    const a = res.data;
+
+    document.getElementById("artist-name").value = a.name || "";
+    document.getElementById("artist-dob").value = a.dob
+      ? a.dob.slice(0, 10)
+      : "";
+    document.getElementById("artist-gender").value = a.gender || "";
+    document.getElementById("artist-address").value = a.address || "";
+    document.getElementById("artist-first-release-year").value =
+      a.first_release_year ?? "";
+    document.getElementById("artist-albums").value =
+      a.no_of_albums_released ?? 0;
+  } catch (error) {
+    closeModal("artist-form-modal");
+    document.getElementById("artists-error").textContent = error.message;
+  }
+}
+
+function openDeleteArtistModal(artistId, artistName) {
+  if (!canManageArtists) return;
+
+  deletingArtistId = artistId;
+  deleteArtistMessage.textContent = `Are you sure you want to delete ${artistName}? This action cannot be undone.`;
+  deleteArtistError.textContent = "";
+  openModal("delete-artist-modal");
 }
 
 function resetArtistUserPicker() {
@@ -584,8 +666,7 @@ function getArtistFormData() {
     .value.trim();
   const albums = document.getElementById("artist-albums").value.trim();
 
-  return {
-    user_id: Number(artistUserIdInput.value),
+  const data = {
     name: document.getElementById("artist-name").value.trim(),
     dob: document.getElementById("artist-dob").value,
     gender: document.getElementById("artist-gender").value,
@@ -593,15 +674,37 @@ function getArtistFormData() {
     first_release_year: firstReleaseYear ? Number(firstReleaseYear) : null,
     no_of_albums_released: albums ? Number(albums) : 0,
   };
+
+  if (artistFormMode === "create") {
+    data.user_id = Number(artistUserIdInput.value);
+  }
+
+  return data;
 }
 
 createArtistBtn.addEventListener("click", openCreateArtistModal);
 
+document.getElementById("artists-table-body").addEventListener("click", (e) => {
+  const editBtn = e.target.closest(".btn-edit");
+  const deleteBtn = e.target.closest(".btn-delete");
+
+  if (editBtn?.dataset.artistId) {
+    openEditArtistModal(Number(editBtn.dataset.artistId));
+  }
+
+  if (deleteBtn?.dataset.artistId) {
+    openDeleteArtistModal(
+      Number(deleteBtn.dataset.artistId),
+      deleteBtn.dataset.artistName,
+    );
+  }
+});
+
 artistForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!canCreateArtists) return;
+  if (!canManageArtists) return;
 
-  if (!artistUserIdInput.value) {
+  if (artistFormMode === "create" && !artistUserIdInput.value) {
     artistFormError.textContent = "Please select an artist user";
     return;
   }
@@ -610,13 +713,38 @@ artistForm.addEventListener("submit", async (e) => {
   artistFormSubmit.disabled = true;
 
   try {
-    await apiRequest("POST", "/api/artists", getArtistFormData());
+    const body = getArtistFormData();
+
+    if (artistFormMode === "create") {
+      await apiRequest("POST", "/api/artists", body);
+    } else {
+      await apiRequest("PUT", `/api/artists/${editingArtistId}`, body);
+    }
+
     closeModal("artist-form-modal");
     loadArtists(artistsCurrentPage);
   } catch (error) {
     artistFormError.textContent = error.message;
   } finally {
     artistFormSubmit.disabled = false;
+  }
+});
+
+deleteArtistConfirm.addEventListener("click", async () => {
+  if (!canManageArtists || !deletingArtistId) return;
+
+  deleteArtistError.textContent = "";
+  deleteArtistConfirm.disabled = true;
+
+  try {
+    await apiRequest("DELETE", `/api/artists/${deletingArtistId}`);
+    closeModal("delete-artist-modal");
+    loadArtists(artistsPagination.getPageAfterDelete());
+  } catch (error) {
+    deleteArtistError.textContent = error.message;
+  } finally {
+    deleteArtistConfirm.disabled = false;
+    deletingArtistId = null;
   }
 });
 

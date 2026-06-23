@@ -252,15 +252,19 @@ button {
 }
 
 #artists-panel .table-wrap-fixed .col-name {
-  width: 40%;
+  width: 32%;
 }
 
 #artists-panel .table-wrap-fixed .col-albums {
-  width: 30%;
+  width: 22%;
 }
 
 #artists-panel .table-wrap-fixed .col-year {
-  width: 30%;
+  width: 22%;
+}
+
+#artists-panel .table-wrap-fixed .col-actions {
+  width: 24%;
 }
 
 .table-wrap-fixed .data-table-fixed th,
@@ -276,7 +280,7 @@ button {
 }
 
 .table-wrap-fixed {
-  min-height: 580px;
+  min-height: 540px;
 }
 
 .table-wrap-fixed .data-table tbody tr {
@@ -345,6 +349,7 @@ button {
   border: 1px solid #ddd;
   border-radius: 6px;
   line-height: 1;
+  cursor: pointer;
 }
 
 .btn-icon .fa {
@@ -356,7 +361,11 @@ button {
 }
 
 .btn-icon:disabled {
-  opacity: 0.3;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboard-page button:disabled {
   cursor: not-allowed;
 }
 

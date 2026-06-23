@@ -19,7 +19,16 @@ function validateUserId(params) {
   return { id: userId };
 }
 
+function validateArtistId(params) {
+  const artistId = parseInt(params.id, 10);
+  if (Number.isNaN(artistId) || artistId < 1) {
+    return { error: "Invalid artist id" };
+  }
+  return { id: artistId };
+}
+
 module.exports = {
   validateParams,
   validateUserId,
+  validateArtistId,
 };

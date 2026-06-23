@@ -74,3 +74,24 @@ curl -i -X POST http://localhost:5000/api/auth/register \
     "no_of_albums_released": 2
   }'
 
+  "get artist"
+  curl -i http://localhost:5000/api/artists/${id} \
+  -H "Authorization: Bearer TOKEN"
+
+  "update artist"
+  curl -i -X PUT http://localhost:5000/api/artists/${id} \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "test user",
+    "dob": "2008-04-15",
+    "gender": "m",
+    "address": "LA",
+    "first_release_year": 2016,
+    "no_of_albums_released": 3
+  }'
+
+  "delete artist"
+  curl -i -X DELETE http://localhost:5000/api/artists/${id} \
+  -H "Authorization: Bearer TOKEN"
+

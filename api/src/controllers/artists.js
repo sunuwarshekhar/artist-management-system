@@ -127,4 +127,94 @@ async function createArtist(req, res) {
   }
 }
 
-module.exports = { listArtists, listUnlinkedArtistUsers, createArtist };
+async function getArtist(req, res) {
+  const artistId = req.params.id;
+
+  try {
+    const result = await query(
+      `SELECT id, user_id, name, dob, gender, address, first_release_year,
+              no_of_albums_released, created_at, updated_at
+       FROM "artist"
+       WHERE id = $1`,
+      [artistId],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "Artist not found");
+    }
+
+    sendSuccess(res, result.rows[0], "Artist fetched");
+  } catch (err) {
+    console.error("getArtist err:", err.message);
+    sendError(res, 500, "Failed to fetch artist");
+  }
+}
+
+async function updateArtist(req, res) {
+  const artistId = req.params.id;
+  const data = req.body;
+
+  try {
+    const existing = await query('SELECT id FROM "artist" WHERE id = $1', [
+      artistId,
+    ]);
+
+    if (existing.rowCount === 0) {
+      return sendError(res, 404, "Artist not found");
+    }
+
+    const fields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    for (const [key, value] of Object.entries(data)) {
+      fields.push(`${key} = $${paramIndex++}`);
+      values.push(value);
+    }
+
+    values.push(artistId);
+
+    const result = await query(
+      `UPDATE "artist"
+       SET ${fields.join(", ")}
+       WHERE id = $${paramIndex}
+       RETURNING id, user_id, name, dob, gender, address, first_release_year,
+                 no_of_albums_released, created_at, updated_at`,
+      values,
+    );
+
+    sendSuccess(res, result.rows[0], "Artist updated");
+  } catch (err) {
+    console.error("updateArtist err:", err.message);
+    sendError(res, 500, "Failed to update artist");
+  }
+}
+
+async function deleteArtist(req, res) {
+  const artistId = req.params.id;
+
+  try {
+    const result = await query(
+      'DELETE FROM "artist" WHERE id = $1 RETURNING id, name',
+      [artistId],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "Artist not found");
+    }
+
+    sendSuccess(res, result.rows[0], "Artist deleted");
+  } catch (err) {
+    console.error("deleteArtist err:", err.message);
+    sendError(res, 500, "Failed to delete artist");
+  }
+}
+
+module.exports = {
+  listArtists,
+  listUnlinkedArtistUsers,
+  createArtist,
+  getArtist,
+  updateArtist,
+  deleteArtist,
+};
