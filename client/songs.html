@@ -27,11 +27,7 @@
     <main class="dashboard-content">
       <div class="songs-header">
         <div class="songs-header-main">
-          <a
-            id="back-to-artists"
-            href="#"
-            class="songs-back-link hidden"
-          >
+          <a id="back-to-artists" href="#" class="songs-back-link hidden">
             <i class="fa fa-arrow-left" aria-hidden="true"></i> Back
           </a>
           <h1 id="songs-page-title" class="songs-page-title">Songs</h1>
@@ -47,18 +43,22 @@
 
       <p id="songs-error" class="error"></p>
 
-      <div class="table-wrap table-wrap-fixed">
+      <div class="table-wrap table-wrap-fixed songs-page">
         <table class="data-table data-table-fixed">
           <colgroup>
             <col class="col-song-title" />
             <col class="col-song-album" />
             <col class="col-song-genre" />
+            <col class="col-actions hidden" id="songs-actions-col" />
           </colgroup>
           <thead>
             <tr>
               <th>Title</th>
               <th>Album</th>
               <th>Genre</th>
+              <th class="col-actions-cell hidden" id="songs-actions-th">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody id="songs-table-body">
@@ -96,7 +96,7 @@
       <div class="modal-backdrop" data-close-modal="song-form-modal"></div>
       <div class="modal-dialog">
         <div class="modal-header">
-          <h2>Create Song</h2>
+          <h2 id="song-form-title">Create Song</h2>
           <button
             type="button"
             class="modal-close"
@@ -116,12 +116,7 @@
               </div>
               <div class="form-field form-field-full">
                 <label for="song-album">Album</label>
-                <input
-                  type="text"
-                  id="song-album"
-                  name="album_name"
-                  required
-                />
+                <input type="text" id="song-album" name="album_name" required />
               </div>
               <div class="form-field form-field-full">
                 <label for="song-genre">Genre</label>
@@ -149,6 +144,39 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div id="delete-song-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="delete-song-modal"></div>
+      <div class="modal-dialog modal-dialog-sm">
+        <div class="modal-header">
+          <h2>Delete Song</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="delete-song-modal"
+            aria-label="Close"
+          >
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="delete-song-message"></p>
+          <p id="delete-song-error" class="error"></p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-close-modal="delete-song-modal"
+          >
+            Cancel
+          </button>
+          <button type="button" id="delete-song-confirm" class="btn-danger">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
 

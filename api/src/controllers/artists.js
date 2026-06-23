@@ -231,25 +231,32 @@ async function getMyArtist(req, res) {
   }
 }
 
+async function verifyArtistOwner(artistId, userId, res) {
+  const artistResult = await query(
+    'SELECT id, user_id FROM "artist" WHERE id = $1',
+    [artistId],
+  );
+
+  if (artistResult.rowCount === 0) {
+    sendError(res, 404, "Artist not found");
+    return null;
+  }
+
+  if (artistResult.rows[0].user_id !== userId) {
+    sendError(res, 403, "No Permission");
+    return null;
+  }
+
+  return artistResult.rows[0];
+}
+
 async function createArtistMusic(req, res) {
   const artistId = req.params.id;
   const { title, album_name, genre } = req.body;
 
   try {
-    const artistResult = await query(
-      'SELECT id, user_id FROM "artist" WHERE id = $1',
-      [artistId],
-    );
-
-    if (artistResult.rowCount === 0) {
-      return sendError(res, 404, "Artist not found");
-    }
-
-    const artist = artistResult.rows[0];
-
-    if (artist.user_id !== req.user.id) {
-      return sendError(res, 403, "No Permission");
-    }
+    const artist = await verifyArtistOwner(artistId, req.user.id, res);
+    if (!artist) return;
 
     const result = await query(
       `INSERT INTO "music" (artist_id, title, album_name, genre)
@@ -320,6 +327,56 @@ async function listArtistMusic(req, res) {
   }
 }
 
+async function updateArtistMusic(req, res) {
+  const { id: artistId, musicId } = req.params;
+  const { title, album_name, genre } = req.body;
+
+  try {
+    const artist = await verifyArtistOwner(artistId, req.user.id, res);
+    if (!artist) return;
+
+    const result = await query(
+      `UPDATE "music"
+       SET title = $1, album_name = $2, genre = $3
+       WHERE id = $4 AND artist_id = $5
+       RETURNING id, artist_id, title, album_name, genre, created_at, updated_at`,
+      [title, album_name, genre, musicId, artistId],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "Song not found");
+    }
+
+    sendSuccess(res, result.rows[0], "Song updated");
+  } catch (err) {
+    console.error("updateArtistMusic err:", err.message);
+    sendError(res, 500, "Failed to update song");
+  }
+}
+
+async function deleteArtistMusic(req, res) {
+  const { id: artistId, musicId } = req.params;
+
+  try {
+    const artist = await verifyArtistOwner(artistId, req.user.id, res);
+    if (!artist) return;
+
+    const result = await query(
+      'DELETE FROM "music" WHERE id = $1 AND artist_id = $2 RETURNING id, title',
+      [musicId, artistId],
+    );
+
+    if (result.rowCount === 0) {
+      return sendError(res, 404, "Song not found");
+    }
+
+    sendSuccess(res, result.rows[0], "Song deleted");
+  } catch (err) {
+    console.error("deleteArtistMusic err:", err.message);
+    sendError(res, 500, "Failed to delete song");
+  }
+}
+
 module.exports = {
   listArtists,
   listUnlinkedArtistUsers,
@@ -330,4 +387,6 @@ module.exports = {
   getMyArtist,
   createArtistMusic,
   listArtistMusic,
+  updateArtistMusic,
+  deleteArtistMusic,
 };

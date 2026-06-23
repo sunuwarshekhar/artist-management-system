@@ -27,8 +27,21 @@ function validateArtistId(params) {
   return { id: artistId };
 }
 
+function validateArtistMusicParams(params) {
+  const artistResult = validateArtistId(params);
+  if (artistResult.error) return artistResult;
+
+  const musicId = parseInt(params.musicId, 10);
+  if (Number.isNaN(musicId) || musicId < 1) {
+    return { error: "Invalid song id" };
+  }
+
+  return { id: artistResult.id, musicId };
+}
+
 module.exports = {
   validateParams,
   validateUserId,
   validateArtistId,
+  validateArtistMusicParams,
 };

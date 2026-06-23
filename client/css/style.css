@@ -322,15 +322,19 @@ button {
 }
 
 .col-song-title {
-  width: 40%;
+  width: 32%;
 }
 
 .col-song-album {
-  width: 35%;
+  width: 28%;
 }
 
 .col-song-genre {
-  width: 25%;
+  width: 20%;
+}
+
+.songs-page .table-wrap-fixed .col-actions {
+  width: 20%;
 }
 
 a.btn-icon {

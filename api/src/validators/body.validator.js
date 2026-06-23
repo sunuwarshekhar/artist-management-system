@@ -567,6 +567,7 @@ module.exports = {
   validateCreateArtist,
   validateUpdateArtist,
   validateCreateMusic,
+  validateUpdateMusic: validateCreateMusic,
   validateRegister,
   validateLogin,
 };
