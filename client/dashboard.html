@@ -42,6 +42,14 @@
         >
           + Create User
         </button>
+        <button
+          id="create-artist-btn"
+          type="button"
+          class="btn-create-user hidden"
+          disabled
+        >
+          + Create Artist
+        </button>
       </div>
 
       <section id="users-panel" class="tab-panel active">
@@ -97,19 +105,150 @@
       </section>
 
       <section id="artists-panel" class="tab-panel">
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Albums Released</th>
-                <th>First Release Year</th>
-              </tr>
-            </thead>
-          </table>
+        <div id="artists-content">
+          <p id="artists-error" class="error"></p>
+          <div class="table-wrap table-wrap-fixed">
+            <table class="data-table data-table-fixed">
+              <colgroup>
+                <col class="col-name" />
+                <col class="col-albums" />
+                <col class="col-year" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Albums Released</th>
+                  <th>First Release Year</th>
+                </tr>
+              </thead>
+              <tbody id="artists-table-body">
+                <tr>
+                  <td colspan="3" class="table-empty">Loading artists...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-slot">
+            <div id="artists-pagination" class="pagination hidden">
+              <button
+                type="button"
+                class="pagination-btn"
+                data-pagination-prev
+                aria-label="Previous page"
+              >
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span class="pagination-info" data-pagination-info></span>
+              <button
+                type="button"
+                class="pagination-btn"
+                data-pagination-next
+                aria-label="Next page"
+              >
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
+
+    <div id="artist-form-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="artist-form-modal"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>Create Artist</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="artist-form-modal"
+            aria-label="Close"
+          >
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <form id="artist-form">
+          <div class="modal-body">
+            <p id="artist-form-error" class="error"></p>
+            <div class="form-grid">
+              <div class="form-field form-field-full">
+                <label for="artist-user-search">Artist User</label>
+                <div class="combobox" id="artist-user-combobox">
+                  <input type="hidden" id="artist-user-id" name="user_id" />
+                  <input
+                    type="text"
+                    id="artist-user-search"
+                    placeholder="Search by name or email..."
+                    autocomplete="off"
+                    required
+                  />
+                  <ul
+                    id="artist-user-options"
+                    class="combobox-list hidden"
+                    role="listbox"
+                  ></ul>
+                </div>
+              </div>
+              <div class="form-field form-field-full">
+                <label for="artist-name">Name</label>
+                <input type="text" id="artist-name" name="name" required />
+              </div>
+              <div class="form-field">
+                <label for="artist-dob">Date of Birth</label>
+                <input type="date" id="artist-dob" name="dob" required />
+              </div>
+              <div class="form-field">
+                <label for="artist-gender">Gender</label>
+                <select id="artist-gender" name="gender" required>
+                  <option value="">select gender</option>
+                  <option value="m">Male</option>
+                  <option value="f">Female</option>
+                  <option value="o">Other</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="artist-first-release-year"
+                  >First Release Year</label
+                >
+                <input
+                  type="number"
+                  id="artist-first-release-year"
+                  name="first_release_year"
+                  min="1900"
+                  max="2099"
+                />
+              </div>
+              <div class="form-field">
+                <label for="artist-albums">Albums Released</label>
+                <input
+                  type="number"
+                  id="artist-albums"
+                  name="no_of_albums_released"
+                  min="0"
+                  value="0"
+                />
+              </div>
+              <div class="form-field form-field-full">
+                <label for="artist-address">Address</label>
+                <input type="text" id="artist-address" name="address" required />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              data-close-modal="artist-form-modal"
+            >
+              Cancel
+            </button>
+            <button type="submit" id="artist-form-submit" class="btn-primary">
+              Create
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <div id="user-form-modal" class="modal hidden">
       <div class="modal-backdrop" data-close-modal="user-form-modal"></div>
@@ -164,6 +303,7 @@
                 <label for="user-role">Role</label>
                 <select id="user-role" name="role" required>
                   <option value="artist_manager">Artist Manager</option>
+                  <option value="artist">Artist</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
               </div>
@@ -184,7 +324,7 @@
               </div>
               <div class="form-field">
                 <label for="user-gender">Gender</label>
-                <select id="user-gender" name="gender">
+                <select id="user-gender" name="gender" required>
                   <option value="">select gender</option>
                   <option value="m">Male</option>
                   <option value="f">Female</option>

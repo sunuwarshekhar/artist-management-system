@@ -77,13 +77,17 @@ function validateCreateUser(body) {
     return { error: "role is required" };
   }
 
-  if (![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER].includes(role)) {
+  if (![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER, ROLES.ARTIST].includes(role)) {
     return {
-      error: "only super admin or artist manager can be created",
+      error: "only super admin, artist manager, or artist can be created",
     };
   }
 
-  if (gender && !GENDERS.includes(gender)) {
+  if (!gender) {
+    return { error: "gender is required" };
+  }
+
+  if (!GENDERS.includes(gender)) {
     return { error: "gender must be m, f, or o" };
   }
 
@@ -109,7 +113,7 @@ function validateCreateUser(body) {
     role,
     phone: cleanPhone,
     dob: dob || null,
-    gender: gender || null,
+    gender: gender,
     address: cleanAddress,
   };
 }
@@ -170,9 +174,9 @@ function validateUpdateUser(body) {
     if (!role) {
       return { error: "role is required" };
     }
-    if (![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER].includes(role)) {
+    if (![ROLES.SUPER_ADMIN, ROLES.ARTIST_MANAGER, ROLES.ARTIST].includes(role)) {
       return {
-        error: "super admin or artist manager roles are allowed",
+        error: "super admin, artist manager, or artist roles are allowed",
       };
     }
     data.role = role;
@@ -187,10 +191,13 @@ function validateUpdateUser(body) {
   }
 
   if (gender !== undefined) {
-    if (gender && !GENDERS.includes(gender)) {
+    if (!gender) {
+      return { error: "gender is required" };
+    }
+    if (!GENDERS.includes(gender)) {
       return { error: "gender must be m, f, or o" };
     }
-    data.gender = gender || null;
+    data.gender = gender;
   }
 
   if (dob !== undefined) {
@@ -292,6 +299,101 @@ function validateRegister(body) {
   };
 }
 
+function validateCreateArtist(body) {
+  const {
+    user_id,
+    name,
+    dob,
+    gender,
+    address,
+    first_release_year,
+    no_of_albums_released,
+  } = body;
+
+  if (user_id === undefined || user_id === null || user_id === "") {
+    return { error: "user is required" };
+  }
+
+  const linkedUserId = Number(user_id);
+  if (!Number.isInteger(linkedUserId) || linkedUserId < 1) {
+    return { error: "user must be a positive integer" };
+  }
+
+  if (!name?.trim()) {
+    return { error: "name is required" };
+  }
+
+  const cleanName = sanitizeName(name);
+  if (cleanName.error) {
+    return { error: `name ${cleanName.error}` };
+  }
+
+  if (!gender) {
+    return { error: "gender is required" };
+  }
+
+  if (!GENDERS.includes(gender)) {
+    return { error: "gender must be m, f, or o" };
+  }
+
+  if (!dob) {
+    return { error: "dob is required" };
+  }
+
+  if (Number.isNaN(Date.parse(dob))) {
+    return { error: "dob must be a valid date" };
+  }
+
+  if (!address?.trim()) {
+    return { error: "address is required" };
+  }
+
+  const cleanAddress = sanitizeText(address);
+  if (!cleanAddress) {
+    return { error: "address is required" };
+  }
+
+  if (cleanAddress.length > 255) {
+    return { error: "address must not exceed 255 characters" };
+  }
+
+  if (first_release_year !== undefined && first_release_year !== null) {
+    const year = Number(first_release_year);
+    const currentYear = new Date().getFullYear();
+    if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
+      return {
+        error: `first release year must be between 1900 and ${currentYear}`,
+      };
+    }
+  }
+
+  if (
+    no_of_albums_released !== undefined &&
+    no_of_albums_released !== null
+  ) {
+    const albums = Number(no_of_albums_released);
+    if (!Number.isInteger(albums) || albums < 0) {
+      return { error: "number of albums released must be a non-negative integer" };
+    }
+  }
+
+  return {
+    user_id: linkedUserId,
+    name: cleanName,
+    dob: dob,
+    gender: gender,
+    address: cleanAddress,
+    first_release_year:
+      first_release_year !== undefined && first_release_year !== null
+        ? Number(first_release_year)
+        : null,
+    no_of_albums_released:
+      no_of_albums_released !== undefined && no_of_albums_released !== null
+        ? Number(no_of_albums_released)
+        : 0,
+  };
+}
+
 function validateLogin(body) {
   const { email, password } = body;
 
@@ -317,6 +419,7 @@ module.exports = {
   validateBody,
   validateCreateUser,
   validateUpdateUser,
+  validateCreateArtist,
   validateRegister,
   validateLogin,
 };

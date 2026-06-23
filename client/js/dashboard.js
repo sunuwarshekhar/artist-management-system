@@ -13,11 +13,18 @@ document.getElementById("logout-btn")?.addEventListener("click", () => {
 });
 
 const canManageUsers = user?.role === ROLES.SUPER_ADMIN;
+const canViewArtists =
+  user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ARTIST_MANAGER;
+const canCreateArtists = user?.role === ROLES.ARTIST_MANAGER;
+
+const artistsTabBtn = document.querySelector('[data-tab="artists"]');
 
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabPanels = document.querySelectorAll(".tab-panel");
 const createUserBtn = document.getElementById("create-user-btn");
+const createArtistBtn = document.getElementById("create-artist-btn");
 const usersPaginationEl = document.getElementById("users-pagination");
+const artistsPaginationEl = document.getElementById("artists-pagination");
 const userFormModal = document.getElementById("user-form-modal");
 const userForm = document.getElementById("user-form");
 const userFormTitle = document.getElementById("user-form-title");
@@ -32,18 +39,34 @@ const userDetailModal = document.getElementById("user-detail-modal");
 const userDetailTitle = document.getElementById("user-detail-title");
 const userDetailContent = document.getElementById("user-detail-content");
 const userDetailError = document.getElementById("user-detail-error");
+const artistFormModal = document.getElementById("artist-form-modal");
+const artistForm = document.getElementById("artist-form");
+const artistFormError = document.getElementById("artist-form-error");
+const artistFormSubmit = document.getElementById("artist-form-submit");
+const artistUserIdInput = document.getElementById("artist-user-id");
+const artistUserSearchInput = document.getElementById("artist-user-search");
+const artistUserOptionsEl = document.getElementById("artist-user-options");
 
 let formMode = "create";
 let editingUserId = null;
 let deletingUserId = null;
 let currentPage = 1;
+let artistsCurrentPage = 1;
 let pagination = null;
 
 const usersPagination = paginationElement(usersPaginationEl, (page) =>
   loadUsers(page),
 );
+const artistsPagination = paginationElement(artistsPaginationEl, (page) =>
+  loadArtists(page),
+);
 
 createUserBtn.disabled = !canManageUsers;
+createArtistBtn.disabled = !canCreateArtists;
+
+if (!canViewArtists) {
+  artistsTabBtn?.classList.add("hidden");
+}
 
 document.getElementById("user-phone")?.addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/\D/g, "");
@@ -52,17 +75,22 @@ document.getElementById("user-phone")?.addEventListener("input", (e) => {
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const tab = button.dataset.tab;
+    if (tab === "artists" && !canViewArtists) return;
 
     tabButtons.forEach((btn) => btn.classList.toggle("active", btn === button));
     tabPanels.forEach((panel) =>
       panel.classList.toggle("active", panel.id === `${tab}-panel`),
     );
     createUserBtn.classList.toggle("hidden", tab !== "users");
+    createArtistBtn.classList.toggle(
+      "hidden",
+      tab !== "artists" || !canCreateArtists,
+    );
 
     if (tab === "users") {
       loadUsers(currentPage);
     } else if (tab === "artists") {
-      loadArtists();
+      loadArtists(artistsCurrentPage);
     }
   });
 });
@@ -136,6 +164,8 @@ document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!userFormModal.classList.contains("hidden"))
     closeModal("user-form-modal");
+  if (!artistFormModal.classList.contains("hidden"))
+    closeModal("artist-form-modal");
   if (!deleteUserModal.classList.contains("hidden"))
     closeModal("delete-user-modal");
   if (!userDetailModal.classList.contains("hidden"))
@@ -331,7 +361,7 @@ function getFormData() {
     role: document.getElementById("user-role").value,
     phone: document.getElementById("user-phone").value.trim() || null,
     dob: document.getElementById("user-dob").value || null,
-    gender: document.getElementById("user-gender").value || null,
+    gender: document.getElementById("user-gender").value,
     address: document.getElementById("user-address").value.trim() || null,
   };
 
@@ -385,6 +415,209 @@ deleteUserConfirm.addEventListener("click", async () => {
   }
 });
 
-async function loadArtists() {}
+async function loadArtists(page = 1) {
+  const tbody = document.getElementById("artists-table-body");
+  const errorEl = document.getElementById("artists-error");
+  errorEl.textContent = "";
+
+  if (!canViewArtists) {
+    tbody.innerHTML =
+      '<tr><td colspan="3" class="table-empty">No permission to view artists.</td></tr>';
+    artistsPagination.hide();
+    return;
+  }
+
+  artistsCurrentPage = page;
+  tbody.innerHTML =
+    '<tr><td colspan="3" class="table-empty">Loading artists...</td></tr>';
+
+  try {
+    const res = await apiRequest(
+      "GET",
+      `/api/artists?page=${page}&limit=${PAGE_LIMIT}`,
+    );
+    renderArtistsTable(res.data.artists);
+    artistsPagination.update(res.data.pagination);
+  } catch (error) {
+    errorEl.textContent = error.message;
+    tbody.innerHTML =
+      '<tr><td colspan="3" class="table-empty">Failed to load artists.</td></tr>';
+    artistsPagination.hide();
+  }
+}
+
+function renderArtistsTable(artists) {
+  const tbody = document.getElementById("artists-table-body");
+
+  if (!artists.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="3" class="table-empty">No artists found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = artists
+    .map(
+      (a) => `
+        <tr>
+          <td>${renderTruncated(a.name, DISPLAY_NAME_MAX)}</td>
+          <td>${escapeHtml(a.no_of_albums_released ?? 0)}</td>
+          <td>${escapeHtml(a.first_release_year) || "-"}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function openCreateArtistModal() {
+  if (!canCreateArtists) return;
+
+  artistForm.reset();
+  resetArtistUserPicker();
+  document.getElementById("artist-albums").value = "0";
+  artistFormError.textContent = "";
+  openModal("artist-form-modal");
+  loadUnlinkedArtistUsers("");
+}
+
+function resetArtistUserPicker() {
+  artistUserIdInput.value = "";
+  artistUserSearchInput.value = "";
+  artistUserOptionsEl.innerHTML = "";
+  artistUserOptionsEl.classList.add("hidden");
+}
+
+function formatUserLabel(u) {
+  const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
+  return fullName || u.email;
+}
+
+function renderUnlinkedUserOptions(users) {
+  if (!users.length) {
+    artistUserOptionsEl.innerHTML =
+      '<li class="combobox-option-empty">No unlinked artist users found.</li>';
+    artistUserOptionsEl.classList.remove("hidden");
+    return;
+  }
+
+  artistUserOptionsEl.innerHTML = users
+    .map((u) => {
+      const fullName =
+        `${escapeHtml(u.first_name ?? "")} ${escapeHtml(u.last_name ?? "")}`.trim();
+      return `
+        <li class="combobox-option" role="option" data-user-id="${u.id}">
+          <strong>${fullName || escapeHtml(u.email)}</strong>
+          <span>${escapeHtml(u.email)}</span>
+        </li>
+      `;
+    })
+    .join("");
+  artistUserOptionsEl.classList.remove("hidden");
+}
+
+let unlinkedUsersTimer = null;
+let unlinkedArtistUsers = [];
+
+async function loadUnlinkedArtistUsers(search) {
+  try {
+    const query = search ? `?search=${encodeURIComponent(search)}` : "";
+    const res = await apiRequest("GET", `/api/artists/unlinked-users${query}`);
+    unlinkedArtistUsers = res.data.users;
+    renderUnlinkedUserOptions(unlinkedArtistUsers);
+  } catch (error) {
+    unlinkedArtistUsers = [];
+    artistUserOptionsEl.innerHTML = `<li class="combobox-option-empty">${escapeHtml(error.message)}</li>`;
+    artistUserOptionsEl.classList.remove("hidden");
+  }
+}
+
+function selectUnlinkedArtistUser(userId) {
+  const user = unlinkedArtistUsers.find((u) => u.id === userId);
+  if (!user) return;
+
+  artistUserIdInput.value = String(user.id);
+  artistUserSearchInput.value = formatUserLabel(user);
+
+  const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim();
+  if (fullName) {
+    document.getElementById("artist-name").value = fullName;
+  }
+  document.getElementById("artist-dob").value = user.dob
+    ? user.dob.slice(0, 10)
+    : "";
+  document.getElementById("artist-gender").value = user.gender || "";
+  document.getElementById("artist-address").value = user.address || "";
+
+  artistUserOptionsEl.classList.add("hidden");
+}
+
+artistUserSearchInput?.addEventListener("input", (e) => {
+  artistUserIdInput.value = "";
+  clearTimeout(unlinkedUsersTimer);
+  const search = e.target.value.trim();
+  unlinkedUsersTimer = setTimeout(() => loadUnlinkedArtistUsers(search), 400);
+});
+
+artistUserSearchInput?.addEventListener("focus", () => {
+  if (!artistUserOptionsEl.children.length) {
+    loadUnlinkedArtistUsers(artistUserSearchInput.value.trim());
+  } else {
+    artistUserOptionsEl.classList.remove("hidden");
+  }
+});
+
+artistUserOptionsEl?.addEventListener("click", (e) => {
+  const option = e.target.closest(".combobox-option");
+  if (option?.dataset.userId) {
+    selectUnlinkedArtistUser(Number(option.dataset.userId));
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#artist-user-combobox")) {
+    artistUserOptionsEl?.classList.add("hidden");
+  }
+});
+
+function getArtistFormData() {
+  const firstReleaseYear = document
+    .getElementById("artist-first-release-year")
+    .value.trim();
+  const albums = document.getElementById("artist-albums").value.trim();
+
+  return {
+    user_id: Number(artistUserIdInput.value),
+    name: document.getElementById("artist-name").value.trim(),
+    dob: document.getElementById("artist-dob").value,
+    gender: document.getElementById("artist-gender").value,
+    address: document.getElementById("artist-address").value.trim(),
+    first_release_year: firstReleaseYear ? Number(firstReleaseYear) : null,
+    no_of_albums_released: albums ? Number(albums) : 0,
+  };
+}
+
+createArtistBtn.addEventListener("click", openCreateArtistModal);
+
+artistForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!canCreateArtists) return;
+
+  if (!artistUserIdInput.value) {
+    artistFormError.textContent = "Please select an artist user";
+    return;
+  }
+
+  artistFormError.textContent = "";
+  artistFormSubmit.disabled = true;
+
+  try {
+    await apiRequest("POST", "/api/artists", getArtistFormData());
+    closeModal("artist-form-modal");
+    loadArtists(artistsCurrentPage);
+  } catch (error) {
+    artistFormError.textContent = error.message;
+  } finally {
+    artistFormSubmit.disabled = false;
+  }
+});
 
 loadUsers(currentPage);

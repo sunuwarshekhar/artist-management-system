@@ -52,3 +52,25 @@ curl -i -X POST http://localhost:5000/api/auth/register \
   curl -i http://localhost:5000/api/users/${id} \
   -H "Authorization: Bearer TOKEN"
 
+  "list artists"
+  curl -i "http://localhost:5000/api/artists?page=1&limit=10" \
+  -H "Authorization: Bearer TOKEN"
+
+  "unlinked artist users"
+  curl -i "http://localhost:5000/api/artists/unlinked-users?search=ramkrishna" \
+  -H "Authorization: Bearer TOKEN"
+
+  "create artist"
+  curl -i -X POST http://localhost:5000/api/artists \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": ${id},
+    "name": "test artist",
+    "dob": "2005-04-15",
+    "gender": "m",
+    "address": "LA",
+    "first_release_year": 2015,
+    "no_of_albums_released": 2
+  }'
+

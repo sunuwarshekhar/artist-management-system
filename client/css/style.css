@@ -29,6 +29,12 @@ label {
   font-size: 14px;
 }
 
+.login-page label:has(+ [required])::after {
+  content: " *";
+  color: #c00;
+  font-weight: 600;
+}
+
 input,
 button {
   width: 100%;
@@ -243,6 +249,18 @@ button {
 
 .table-wrap-fixed .col-actions {
   width: 20%;
+}
+
+#artists-panel .table-wrap-fixed .col-name {
+  width: 40%;
+}
+
+#artists-panel .table-wrap-fixed .col-albums {
+  width: 30%;
+}
+
+#artists-panel .table-wrap-fixed .col-year {
+  width: 30%;
 }
 
 .table-wrap-fixed .data-table-fixed th,
@@ -559,6 +577,12 @@ button {
   margin-top: 0;
 }
 
+.modal .form-field:has([required]) > label::after {
+  content: " *";
+  color: #c00;
+  font-weight: 600;
+}
+
 .modal .form-field input,
 .modal .form-field select {
   width: 100%;
@@ -572,4 +596,61 @@ button {
 
 .modal .form-field select {
   background: #fff;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.combobox {
+  position: relative;
+}
+
+.combobox-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.combobox-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.combobox-option:hover,
+.combobox-option.active {
+  background: #f0f4ff;
+}
+
+.combobox-option-empty {
+  padding: 8px 12px;
+  color: #888;
+  font-size: 14px;
+  cursor: default;
+}
+
+.combobox-option strong {
+  display: block;
+  font-weight: 600;
+}
+
+.combobox-option span {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
 }

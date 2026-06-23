@@ -45,4 +45,13 @@ function validatePagination(query) {
   };
 }
 
-module.exports = { validateQuery, validatePagination };
+function validateUnlinkedUsersSearch(query) {
+  const search = query.search?.trim() || "";
+  return { search };
+}
+
+module.exports = {
+  validateQuery,
+  validatePagination,
+  validateUnlinkedUsersSearch,
+};
