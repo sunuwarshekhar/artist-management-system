@@ -23,6 +23,7 @@
   const canManageArtists = user?.role === ROLES.ARTIST_MANAGER;
   const canCreateArtists = canManageArtists;
 
+  const usersTabBtn = document.querySelector('[data-tab="users"]');
   const artistsTabBtn = document.querySelector('[data-tab="artists"]');
 
   const tabButtons = document.querySelectorAll(".tab-btn");
@@ -88,6 +89,10 @@
   createUserBtn.disabled = !canManageUsers;
   createArtistBtn.disabled = !canCreateArtists;
 
+  if (!canManageUsers) {
+    usersTabBtn?.classList.add("hidden");
+  }
+
   if (!canViewArtists) {
     artistsTabBtn?.classList.add("hidden");
   }
@@ -100,8 +105,11 @@
     if (tab === "artists" && !canViewArtists) {
       tab = "users";
     }
+    if (tab === "users" && !canManageUsers) {
+      tab = "artists";
+    }
     if (tab !== "users" && tab !== "artists") {
-      tab = "users";
+      tab = canViewArtists && !canManageUsers ? "artists" : "users";
     }
 
     tabButtons.forEach((btn) =>
@@ -869,8 +877,13 @@
     }
   });
 
-  const initialTab = new URLSearchParams(window.location.search).get("tab");
-  switchTab(initialTab === "artists" && canViewArtists ? "artists" : "users", {
-    updateUrl: false,
-  });
+  function resolveInitialTab() {
+    const urlTab = new URLSearchParams(window.location.search).get("tab");
+    if (urlTab === "artists" && canViewArtists) return "artists";
+    if (urlTab === "users" && canManageUsers) return "users";
+    if (canViewArtists && !canManageUsers) return "artists";
+    return "users";
+  }
+
+  switchTab(resolveInitialTab(), { updateUrl: false });
 })();

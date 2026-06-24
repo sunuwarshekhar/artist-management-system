@@ -55,20 +55,14 @@ const auth = {
   },
 
   getSongsPageUrl(artistId) {
-    return `songs.html#artist_id=${encodeURIComponent(artistId)}`;
+    const params = new URLSearchParams({ artist_id: String(artistId) });
+    return `songs?${params}`;
   },
 
   getArtistIdFromPage() {
-    const searchId = new URLSearchParams(window.location.search).get(
+    const artistId = new URLSearchParams(window.location.search).get(
       "artist_id",
     );
-    if (searchId) return Number(searchId);
-
-    const hash = window.location.hash.replace(/^#/, "");
-    if (!hash) return null;
-
-    const hashParams = new URLSearchParams(hash);
-    const hashId = hashParams.get("artist_id");
-    return hashId ? Number(hashId) : null;
+    return artistId ? Number(artistId) : null;
   },
 };

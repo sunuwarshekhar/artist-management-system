@@ -56,7 +56,7 @@
     backLink?.classList.remove("hidden");
     if (navbarBrand) navbarBrand.href = "dashboard.html";
   } else if (isArtistUser) {
-    if (navbarBrand) navbarBrand.href = "songs.html";
+    if (navbarBrand) navbarBrand.href = "songs";
     backLink?.classList.add("hidden");
   }
 

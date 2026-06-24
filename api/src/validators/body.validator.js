@@ -1,5 +1,5 @@
 const { sendError } = require("../helpers/response");
-const { ROLES, ALL_ROLES } = require("../constants/roles");
+const { ROLES } = require("../constants/roles");
 const {
   EMAIL_REGEX,
   GENDERS,
@@ -270,10 +270,11 @@ function validateRegister(body) {
     };
   }
 
-  const userRole = role || ROLES.ARTIST;
-  if (!ALL_ROLES.includes(userRole)) {
-    return { error: "Invalid role" };
+  if (role && role !== ROLES.ARTIST_MANAGER) {
+    return { error: "only artist manager accounts can register publicly" };
   }
+
+  const userRole = ROLES.ARTIST_MANAGER;
 
   if (gender && !GENDERS.includes(gender)) {
     return { error: "gender must be m, f, or o" };

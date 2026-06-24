@@ -61,6 +61,20 @@ button {
   margin-top: 12px;
 }
 
+.success {
+  color: #0a7a2f;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.login-page .success:not(:empty) {
+  background: #e8f5e9;
+  border: 1px solid #0a7a2f;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+}
+
 .link {
   margin-top: 16px;
   font-size: 14px;
