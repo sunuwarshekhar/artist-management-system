@@ -10,6 +10,10 @@ const MIN_PASSWORD_LENGTH = 8;
 const PHONE_MAX_LENGTH = 10;
 const MUSIC_GENRES = ["rnb", "country", "classic", "rock", "jazz"];
 
+// csv max file size
+const MAX_CSV_MB = 2;
+const MAX_CSV_BYTES = MAX_CSV_MB * 1024 * 1024;
+
 module.exports = {
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
@@ -19,4 +23,6 @@ module.exports = {
   MIN_PASSWORD_LENGTH,
   PHONE_MAX_LENGTH,
   MUSIC_GENRES,
+  MAX_CSV_MB,
+  MAX_CSV_BYTES,
 };

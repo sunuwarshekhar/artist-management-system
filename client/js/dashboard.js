@@ -784,6 +784,12 @@
     const errorEl = document.getElementById("artists-error");
     errorEl.textContent = "";
 
+    if (file.size > MAX_CSV_BYTES) {
+      errorEl.textContent = `CSV file must not exceed ${MAX_CSV_MB} MB`;
+      importArtistsInput.value = "";
+      return;
+    }
+
     try {
       importArtistsBtn.disabled = true;
       const csvText = await file.text();
