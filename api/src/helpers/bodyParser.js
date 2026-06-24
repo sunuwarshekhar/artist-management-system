@@ -17,4 +17,21 @@ function parseJsonBody(req, res, next) {
   });
 }
 
-module.exports = { parseJsonBody };
+function parseTextBody(req, res, next) {
+  let body = "";
+
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on("end", () => {
+    req.rawBody = body;
+    next();
+  });
+
+  req.on("error", () => {
+    sendError(res, 400, "Failed to read request body");
+  });
+}
+
+module.exports = { parseJsonBody, parseTextBody };

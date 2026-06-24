@@ -10,9 +10,11 @@ const {
   listArtistMusic,
   updateArtistMusic,
   deleteArtistMusic,
+  exportArtistsCsv,
+  importArtistsCsv,
 } = require("../controllers/artists");
 const { compose } = require("../helpers/compose");
-const { parseJsonBody } = require("../helpers/bodyParser");
+const { parseJsonBody, parseTextBody } = require("../helpers/bodyParser");
 const { authenticate } = require("../middleware/auth");
 const { authorizeRolesStrict } = require("../middleware/checkPermission");
 const { ROLES } = require("../constants/roles");
@@ -41,6 +43,25 @@ function handleArtistRoutes(req, res, method, path) {
       authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
       validateQuery(validateUnlinkedUsersSearch, "unlinkedSearch"),
       listUnlinkedArtistUsers,
+    ]);
+    return true;
+  }
+
+  if (method === "GET" && path === "/api/artists/export") {
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
+      exportArtistsCsv,
+    ]);
+    return true;
+  }
+
+  if (method === "POST" && path === "/api/artists/import") {
+    compose(req, res, [
+      authenticate,
+      authorizeRolesStrict([ROLES.ARTIST_MANAGER]),
+      parseTextBody,
+      importArtistsCsv,
     ]);
     return true;
   }

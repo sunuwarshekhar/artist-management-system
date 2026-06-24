@@ -21,4 +21,12 @@ function sendSuccess(res, data, message, statusCode) {
   });
 }
 
-module.exports = { sendJSON, sendError, sendSuccess };
+function sendCsv(res, filename, csvText) {
+  res.writeHead(200, {
+    "Content-Type": "text/csv; charset=utf-8",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+  });
+  res.end(csvText);
+}
+
+module.exports = { sendJSON, sendError, sendSuccess, sendCsv };

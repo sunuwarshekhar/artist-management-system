@@ -127,3 +127,8 @@ curl -i -X POST http://localhost:5000/api/auth/register \
   curl -i http://localhost:5000/api/artists/me \
   -H "Authorization: Bearer TOKEN"
 
+  "export csv"
+  curl -i http://localhost:5000/api/artists/export \
+  -H "Authorization: Bearer TOKEN" \
+  -o artists.csv
+

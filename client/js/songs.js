@@ -266,14 +266,14 @@
                 data-song-album="${escapeHtml(song.album_name || "")}"
                 data-song-genre="${escapeHtml(song.genre || "")}"
                 title="Edit"
-              ><i class="fa fa-pencil" aria-hidden="true"></i></button>
+              ><i class="fa-solid fa-pencil" aria-hidden="true"></i></button>
               <button
                 type="button"
                 class="btn-icon btn-icon-danger btn-delete"
                 data-song-id="${song.id}"
                 data-song-title="${escapeHtml(song.title)}"
                 title="Delete"
-              ><i class="fa fa-trash" aria-hidden="true"></i></button>
+              ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
             </div>
           </td>
         `

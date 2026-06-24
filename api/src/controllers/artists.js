@@ -1,6 +1,15 @@
 const { query } = require("../database/config");
 const { ROLES } = require("../constants/roles");
-const { sendError, sendSuccess } = require("../helpers/response");
+const { sendError, sendSuccess, sendCsv } = require("../helpers/response");
+const { parseCsv, toCsvRow, rowsToObjects } = require("../helpers/csv");
+const { validateCreateArtist } = require("../validators/body.validator");
+
+function formatDateForCsv(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
 
 async function listArtists(req, res) {
   const { page, limit, offset } = req.pagination;
@@ -377,6 +386,177 @@ async function deleteArtistMusic(req, res) {
   }
 }
 
+const ARTIST_CSV_HEADERS = [
+  "id",
+  "user_id",
+  "user_email",
+  "name",
+  "dob",
+  "gender",
+  "address",
+  "first_release_year",
+  "no_of_albums_released",
+];
+
+async function exportArtistsCsv(req, res) {
+  try {
+    const result = await query(
+      `SELECT a.id, a.user_id, u.email AS user_email, a.name, a.dob, a.gender,
+              a.address, a.first_release_year, a.no_of_albums_released
+       FROM "artist" a
+       JOIN "user" u ON u.id = a.user_id
+       ORDER BY a.created_at DESC`,
+    );
+
+    const lines = [toCsvRow(ARTIST_CSV_HEADERS)];
+
+    for (const artist of result.rows) {
+      lines.push(
+        toCsvRow([
+          artist.id,
+          artist.user_id,
+          artist.user_email,
+          artist.name,
+          formatDateForCsv(artist.dob),
+          artist.gender,
+          artist.address,
+          artist.first_release_year ?? "",
+          artist.no_of_albums_released ?? 0,
+        ]),
+      );
+    }
+
+    sendCsv(res, "artists.csv", lines.join("\n"));
+  } catch (err) {
+    console.error("exportArtistsCsv err:", err.message);
+    sendError(res, 500, "Failed to export artists");
+  }
+}
+
+async function resolveImportUserId(row) {
+  if (row.user_id) {
+    return Number(row.user_id);
+  }
+
+  if (!row.user_email) {
+    return null;
+  }
+
+  const result = await query(
+    `SELECT u.id
+     FROM "user" u
+     LEFT JOIN "artist" a ON a.user_id = u.id
+     WHERE u.email = $1 AND u.role = $2 AND a.id IS NULL`,
+    [row.user_email.trim().toLowerCase(), ROLES.ARTIST],
+  );
+
+  return result.rowCount > 0 ? result.rows[0].id : null;
+}
+
+async function importArtistsCsv(req, res) {
+  const csvText = req.rawBody?.trim();
+
+  if (!csvText) {
+    return sendError(res, 400, "CSV file is required");
+  }
+
+  try {
+    const rows = rowsToObjects(parseCsv(csvText));
+
+    if (!rows.length) {
+      return sendError(res, 400, "CSV must include a header row and data rows");
+    }
+
+    const created = [];
+    const errors = [];
+
+    for (const row of rows) {
+      const rowNumber = row._row;
+
+      try {
+        const userId = await resolveImportUserId(row);
+
+        if (!userId) {
+          errors.push({
+            row: rowNumber,
+            message: "user_id or a valid unlinked user_email is required",
+          });
+          continue;
+        }
+
+        const validation = validateCreateArtist({
+          user_id: userId,
+          name: row.name,
+          dob: row.dob,
+          gender: row.gender,
+          address: row.address,
+          first_release_year:
+            row.first_release_year === "" ? null : row.first_release_year,
+          no_of_albums_released:
+            row.no_of_albums_released === "" ? 0 : row.no_of_albums_released,
+        });
+
+        if (validation.error) {
+          errors.push({ row: rowNumber, message: validation.error });
+          continue;
+        }
+
+        const userResult = await query(
+          `SELECT u.id
+           FROM "user" u
+           LEFT JOIN "artist" a ON a.user_id = u.id
+           WHERE u.id = $1 AND u.role = $2 AND a.id IS NULL`,
+          [validation.user_id, ROLES.ARTIST],
+        );
+
+        if (userResult.rowCount === 0) {
+          errors.push({
+            row: rowNumber,
+            message: "Selected user is not an unlinked artist account",
+          });
+          continue;
+        }
+
+        const insertResult = await query(
+          `INSERT INTO "artist"
+            (user_id, name, dob, gender, address, first_release_year, no_of_albums_released)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id, user_id, name`,
+          [
+            validation.user_id,
+            validation.name,
+            validation.dob,
+            validation.gender,
+            validation.address,
+            validation.first_release_year,
+            validation.no_of_albums_released ?? 0,
+          ],
+        );
+
+        created.push(insertResult.rows[0]);
+      } catch (err) {
+        errors.push({
+          row: rowNumber,
+          message: err.message || "Failed to import row",
+        });
+      }
+    }
+
+    sendSuccess(
+      res,
+      {
+        created: created.length,
+        failed: errors.length,
+        errors,
+      },
+      "Artists import completed",
+    );
+  } catch (err) {
+    console.error("importArtistsCsv err:", err.message);
+    sendError(res, 500, "Failed to import artists");
+  }
+}
+
 module.exports = {
   listArtists,
   listUnlinkedArtistUsers,
@@ -389,4 +569,6 @@ module.exports = {
   listArtistMusic,
   updateArtistMusic,
   deleteArtistMusic,
+  exportArtistsCsv,
+  importArtistsCsv,
 };

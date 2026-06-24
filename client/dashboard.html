@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
   </head>
   <body class="dashboard-page">
@@ -42,14 +42,40 @@
         >
           + Create User
         </button>
-        <button
-          id="create-artist-btn"
-          type="button"
-          class="btn-create-user hidden"
-          disabled
-        >
-          + Create Artist
-        </button>
+        <div id="artist-actions" class="tab-actions hidden">
+          <button
+            id="import-artists-btn"
+            type="button"
+            class="btn-icon btn-tab-action"
+            title="Import CSV"
+            aria-label="Import CSV"
+          >
+            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+          </button>
+          <button
+            id="export-artists-btn"
+            type="button"
+            class="btn-icon btn-tab-action"
+            title="Export CSV"
+            aria-label="Export CSV"
+          >
+            <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+          </button>
+          <input
+            id="import-artists-input"
+            type="file"
+            accept=".csv,text/csv"
+            class="hidden"
+          />
+          <button
+            id="create-artist-btn"
+            type="button"
+            class="btn-create-user"
+            disabled
+          >
+            + Create Artist
+          </button>
+        </div>
       </div>
 
       <section id="users-panel" class="tab-panel active">
@@ -88,7 +114,7 @@
                 data-pagination-prev
                 aria-label="Previous page"
               >
-                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
               </button>
               <span class="pagination-info" data-pagination-info></span>
               <button
@@ -97,7 +123,7 @@
                 data-pagination-next
                 aria-label="Next page"
               >
-                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -138,7 +164,7 @@
                 data-pagination-prev
                 aria-label="Previous page"
               >
-                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
               </button>
               <span class="pagination-info" data-pagination-info></span>
               <button
@@ -147,7 +173,7 @@
                 data-pagination-next
                 aria-label="Next page"
               >
-                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -166,7 +192,7 @@
             data-close-modal="artist-form-modal"
             aria-label="Close"
           >
-            <i class="fa fa-times" aria-hidden="true"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
         <form id="artist-form">
@@ -268,7 +294,7 @@
             data-close-modal="delete-artist-modal"
             aria-label="Close"
           >
-            <i class="fa fa-times" aria-hidden="true"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
         <div class="modal-body">
@@ -301,7 +327,7 @@
             data-close-modal="user-form-modal"
             aria-label="Close"
           >
-            <i class="fa fa-times" aria-hidden="true"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
         <form id="user-form">
@@ -404,7 +430,7 @@
             data-close-modal="user-detail-modal"
             aria-label="Close"
           >
-            <i class="fa fa-times" aria-hidden="true"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
         <div class="modal-body">
@@ -434,7 +460,7 @@
             data-close-modal="delete-user-modal"
             aria-label="Close"
           >
-            <i class="fa fa-times" aria-hidden="true"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
         <div class="modal-body">
@@ -451,6 +477,36 @@
           </button>
           <button type="button" id="delete-user-confirm" class="btn-danger">
             Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="import-artists-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="import-artists-modal"></div>
+      <div class="modal-dialog modal-dialog-sm">
+        <div class="modal-header">
+          <h2>Import Results</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="import-artists-modal"
+            aria-label="Close"
+          >
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="import-artists-summary"></p>
+          <ul id="import-artists-errors" class="import-errors-list"></ul>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-primary"
+            data-close-modal="import-artists-modal"
+          >
+            Close
           </button>
         </div>
       </div>
