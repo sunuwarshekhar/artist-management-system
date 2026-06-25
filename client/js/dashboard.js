@@ -64,6 +64,10 @@
   const artistUserIdInput = document.getElementById("artist-user-id");
   const artistUserSearchInput = document.getElementById("artist-user-search");
   const artistUserOptionsEl = document.getElementById("artist-user-options");
+  const artistDetailModal = document.getElementById("artist-detail-modal");
+  const artistDetailTitle = document.getElementById("artist-detail-title");
+  const artistDetailContent = document.getElementById("artist-detail-content");
+  const artistDetailError = document.getElementById("artist-detail-error");
   const deleteArtistModal = document.getElementById("delete-artist-modal");
   const deleteArtistMessage = document.getElementById("delete-artist-message");
   const deleteArtistError = document.getElementById("delete-artist-error");
@@ -86,8 +90,7 @@
     loadArtists(page),
   );
 
-  createUserBtn.disabled = !canManageUsers;
-  createArtistBtn.disabled = !canCreateArtists;
+  createUserBtn.classList.toggle("hidden", !canManageUsers);
 
   if (!canManageUsers) {
     usersTabBtn?.classList.add("hidden");
@@ -118,7 +121,10 @@
     tabPanels.forEach((panel) =>
       panel.classList.toggle("active", panel.id === `${tab}-panel`),
     );
-    createUserBtn.classList.toggle("hidden", tab !== "users");
+    createUserBtn.classList.toggle(
+      "hidden",
+      tab !== "users" || !canManageUsers,
+    );
     artistActions?.classList.toggle(
       "hidden",
       tab !== "artists" || !canManageArtists,
@@ -171,6 +177,19 @@
     return new Date(value).toLocaleString();
   }
 
+  function renderDetailFields(fields) {
+    return fields
+      .map(
+        ({ label, value }) => `
+        <div class="detail-item">
+          <span class="detail-label">${escapeHtml(label)}</span>
+          <span class="detail-value">${escapeHtml(value) || "-"}</span>
+        </div>
+      `,
+      )
+      .join("");
+  }
+
   function renderUserDetail(u) {
     const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
     userDetailTitle.textContent = fullName || "User Details";
@@ -188,16 +207,7 @@
       { label: "Last Updated", value: formatDateTime(u.updated_at) },
     ];
 
-    userDetailContent.innerHTML = fields
-      .map(
-        ({ label, value }) => `
-        <div class="detail-item">
-          <span class="detail-label">${escapeHtml(label)}</span>
-          <span class="detail-value">${escapeHtml(value) || "-"}</span>
-        </div>
-      `,
-      )
-      .join("");
+    userDetailContent.innerHTML = renderDetailFields(fields);
   }
 
   function openModal(id) {
@@ -231,6 +241,8 @@
       closeModal("user-detail-modal");
     if (!importArtistsModal.classList.contains("hidden"))
       closeModal("import-artists-modal");
+    if (!artistDetailModal.classList.contains("hidden"))
+      closeModal("artist-detail-modal");
   });
 
   function renderUsersTable(users) {
@@ -245,9 +257,6 @@
     tbody.innerHTML = users
       .map((u) => {
         const isSelf = u.id === user?.id;
-        const disabled = !canManageUsers || isSelf;
-        const deleteDisabled = disabled;
-        const editDisabled = !canManageUsers;
         const fullName = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
 
         return `
@@ -258,6 +267,9 @@
           <td>${escapeHtml(u.phone) || "-"}</td>
           <td class="col-actions-cell">
             <div class="table-actions">
+              ${
+                canManageUsers
+                  ? `
               <button
                 type="button"
                 class="btn-icon btn-view"
@@ -268,17 +280,24 @@
                 type="button"
                 class="btn-icon btn-edit"
                 data-user-id="${u.id}"
-                title="${editDisabled ? "No permission" : "Edit"}"
-                ${editDisabled ? "disabled" : ""}
+                title="Edit"
               ><i class="fa-solid fa-pencil" aria-hidden="true"></i></button>
+              ${
+                !isSelf
+                  ? `
               <button
                 type="button"
                 class="btn-icon btn-icon-danger btn-delete"
                 data-user-id="${u.id}"
                 data-user-name="${escapeHtml(fullName)}"
-                title="${isSelf ? "Cannot delete your own account" : deleteDisabled ? "No permission" : "Delete"}"
-                ${deleteDisabled ? "disabled" : ""}
+                title="Delete"
               ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+              `
+                  : ""
+              }
+              `
+                  : ""
+              }
             </div>
           </td>
         </tr>
@@ -404,11 +423,11 @@
       openViewModal(Number(viewBtn.dataset.userId));
     }
 
-    if (editBtn && !editBtn.disabled) {
+    if (editBtn) {
       openEditModal(Number(editBtn.dataset.userId));
     }
 
-    if (deleteBtn && !deleteBtn.disabled) {
+    if (deleteBtn) {
       openDeleteModal(
         Number(deleteBtn.dataset.userId),
         deleteBtn.dataset.userName,
@@ -509,6 +528,55 @@
     }
   }
 
+  function renderArtistDetail(a) {
+    artistDetailTitle.textContent = a.name || "Artist Details";
+
+    const fields = [
+      { label: "Name", value: a.name },
+      { label: "Date of Birth", value: formatDate(a.dob) },
+      { label: "Gender", value: formatGender(a.gender) },
+      { label: "Address", value: a.address },
+      { label: "First Release Year", value: a.first_release_year },
+      { label: "Albums Released", value: a.no_of_albums_released },
+      { label: "Created At", value: formatDateTime(a.created_at) },
+      { label: "Last Updated", value: formatDateTime(a.updated_at) },
+    ];
+
+    artistDetailContent.innerHTML = `
+      <div class="detail-grid">
+        ${renderDetailFields(fields)}
+      </div>
+      <div class="detail-section">
+        <h4 class="detail-section-title">User Account</h3>
+        <div class="detail-grid">
+          ${renderDetailFields([
+            { label: "Full Name", value: a.associated_user?.full_name },
+            { label: "Phone", value: a.associated_user?.phone },
+            { label: "Email", value: a.associated_user?.email },
+          ])}
+        </div>
+      </div>
+    `;
+  }
+
+  async function openViewArtistModal(artistId) {
+    if (!canManageArtists) return;
+
+    artistDetailError.textContent = "";
+    artistDetailTitle.textContent = "Artist Details";
+    artistDetailContent.innerHTML =
+      '<p class="table-empty">Loading artist details...</p>';
+    openModal("artist-detail-modal");
+
+    try {
+      const res = await apiRequest("GET", `/api/artists/${artistId}`);
+      renderArtistDetail(res.data);
+    } catch (error) {
+      artistDetailContent.innerHTML = "";
+      artistDetailError.textContent = error.message;
+    }
+  }
+
   function renderArtistsTable(artists) {
     const tbody = document.getElementById("artists-table-body");
 
@@ -520,8 +588,6 @@
 
     tbody.innerHTML = artists
       .map((a) => {
-        const noPermission = !canManageArtists;
-
         return `
         <tr>
           <td>${renderTruncated(a.name, DISPLAY_NAME_MAX)}</td>
@@ -529,6 +595,31 @@
           <td>${escapeHtml(a.first_release_year) || "-"}</td>
           <td class="col-actions-cell">
             <div class="table-actions">
+              ${
+                canManageArtists
+                  ? `
+              <button
+                type="button"
+                class="btn-icon btn-view"
+                data-artist-id="${a.id}"
+                title="View details"
+              ><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+              <button
+                type="button"
+                class="btn-icon btn-edit"
+                data-artist-id="${a.id}"
+                title="Edit"
+              ><i class="fa-solid fa-pencil" aria-hidden="true"></i></button>
+              <button
+                type="button"
+                class="btn-icon btn-icon-danger btn-delete"
+                data-artist-id="${a.id}"
+                data-artist-name="${escapeHtml(a.name)}"
+                title="Delete"
+              ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+              `
+                  : ""
+              }
               ${
                 canViewArtistSongs
                   ? `
@@ -541,21 +632,6 @@
               `
                   : ""
               }
-              <button
-                type="button"
-                class="btn-icon btn-edit"
-                data-artist-id="${a.id}"
-                title="${noPermission ? "No permission" : "Edit"}"
-                ${noPermission ? "disabled" : ""}
-              ><i class="fa-solid fa-pencil" aria-hidden="true"></i></button>
-              <button
-                type="button"
-                class="btn-icon btn-icon-danger btn-delete"
-                data-artist-id="${a.id}"
-                data-artist-name="${escapeHtml(a.name)}"
-                title="${noPermission ? "No permission" : "Delete"}"
-                ${noPermission ? "disabled" : ""}
-              ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
             </div>
           </td>
         </tr>
@@ -812,9 +888,15 @@
   document
     .getElementById("artists-table-body")
     .addEventListener("click", (e) => {
+      const viewBtn = e.target.closest(".btn-view");
       const songsBtn = e.target.closest(".btn-songs");
       const editBtn = e.target.closest(".btn-edit");
       const deleteBtn = e.target.closest(".btn-delete");
+
+      if (viewBtn?.dataset.artistId) {
+        openViewArtistModal(Number(viewBtn.dataset.artistId));
+        return;
+      }
 
       if (songsBtn?.dataset.artistId) {
         window.location.href = auth.getSongsPageUrl(

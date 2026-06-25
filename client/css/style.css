@@ -663,6 +663,19 @@ a.btn-icon {
   word-break: break-word;
 }
 
+.detail-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.detail-section-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

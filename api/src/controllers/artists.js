@@ -141,10 +141,13 @@ async function getArtist(req, res) {
 
   try {
     const result = await query(
-      `SELECT id, user_id, name, dob, gender, address, first_release_year,
-              no_of_albums_released, created_at, updated_at
-       FROM "artist"
-       WHERE id = $1`,
+      `SELECT a.id, a.user_id, a.name, a.dob, a.gender, a.address,
+              a.first_release_year, a.no_of_albums_released, a.created_at, a.updated_at,
+              u.first_name AS user_first_name, u.last_name AS user_last_name,
+              u.email AS user_email, u.phone AS user_phone
+       FROM "artist" a
+       JOIN "user" u ON u.id = a.user_id
+       WHERE a.id = $1`,
       [artistId],
     );
 
@@ -152,7 +155,31 @@ async function getArtist(req, res) {
       return sendError(res, 404, "Artist not found");
     }
 
-    sendSuccess(res, result.rows[0], "Artist fetched");
+    const row = result.rows[0];
+    const fullName =
+      `${row.user_first_name ?? ""} ${row.user_last_name ?? ""}`.trim();
+
+    sendSuccess(
+      res,
+      {
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        dob: row.dob,
+        gender: row.gender,
+        address: row.address,
+        first_release_year: row.first_release_year,
+        no_of_albums_released: row.no_of_albums_released,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        associated_user: {
+          full_name: fullName || null,
+          email: row.user_email,
+          phone: row.user_phone,
+        },
+      },
+      "Artist detail fetched",
+    );
   } catch (err) {
     console.error("getArtist err:", err.message);
     sendError(res, 500, "Failed to fetch artist");

@@ -37,8 +37,7 @@
         <button
           id="create-user-btn"
           type="button"
-          class="btn-create-user"
-          disabled
+          class="btn-create-user hidden"
         >
           + Create User
         </button>
@@ -67,12 +66,7 @@
             accept=".csv,text/csv"
             class="hidden"
           />
-          <button
-            id="create-artist-btn"
-            type="button"
-            class="btn-create-user"
-            disabled
-          >
+          <button id="create-artist-btn" type="button" class="btn-create-user">
             + Create Artist
           </button>
         </div>
@@ -280,6 +274,36 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div id="artist-detail-modal" class="modal hidden">
+      <div class="modal-backdrop" data-close-modal="artist-detail-modal"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 id="artist-detail-title">Artist Details</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal="artist-detail-modal"
+            aria-label="Close"
+          >
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="artist-detail-error" class="error"></p>
+          <div id="artist-detail-content"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-close-modal="artist-detail-modal"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
