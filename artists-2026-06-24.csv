@@ -1,0 +1,4 @@
+id,user_id,user_email,name,dob,gender,address,first_release_year,no_of_albums_released
+1,12,michael@gmail.com,System of a down,6/10/2026,m,asd,1996,12
+2,8,testuser@gmail.com,Beatles,5/10/2026,m,LA,1960,4
+3,9,jack@gmail.com,Pantera,6/16/2026,m,NY,1989,9
